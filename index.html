@@ -1,0 +1,2070 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <!-- ICONS & PWA -->
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icon.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-touch-fullscreen" content="yes">
+
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Celebook">
+  <meta name="theme-color" content="#1B3022">
+  <title>Celebook · Mi Biblioteca</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Marcellus&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green-deep: #1B3022; --wood: #4E342E; --wood-light: #6B4A40; --wood-dark: #2E1F1B;
+      --cream: #F5F5DC; --cream-soft: rgba(245,245,220,0.78); --cream-faint: rgba(245,245,220,0.45); --cream-ghost: rgba(245,245,220,0.12);
+      --gold: #C9A961; --gold-bright: #E5C158; --gold-dim: rgba(201,169,97,0.25); --shadow-deep: rgba(0,0,0,0.55);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: 'EB Garamond', Georgia, serif; font-size: 17px; color: var(--cream);
+      background: radial-gradient(ellipse 120% 60% at 50% 0%, rgba(110,78,60,0.35), transparent 60%), 
+                  radial-gradient(ellipse 90% 80% at 50% 100%, rgba(0,0,0,0.55), transparent 70%), var(--green-deep);
+      background-attachment: fixed; min-height: 100dvh; overflow-x: hidden; padding-bottom: calc(max(env(safe-area-inset-bottom), 16px) + 90px); -webkit-overflow-scrolling: touch;
+    }
+    body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0.08; mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.7 0'/></filter><rect width='240' height='240' filter='url(%23n)'/></svg>");
+    }
+    body.modal-open { overflow: hidden; }
+    .header { position: sticky; top: 0; z-index: 100; padding-top: calc(env(safe-area-inset-top) + 14px); padding-bottom: 14px;
+      padding-left: max(20px, env(safe-area-inset-left)); padding-right: max(20px, env(safe-area-inset-right));
+      background: linear-gradient(180deg, rgba(46,31,27,0.96) 0%, rgba(78,52,46,0.88) 100%); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(201,169,97,0.18); box-shadow: 0 6px 20px -8px var(--shadow-deep);
+    }
+    .header::after { content: ''; position: absolute; left: 50%; bottom: -1px; transform: translateX(-50%); width: 60%; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); opacity: 0.5; }
+    .title { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 28px; color: var(--cream); }
+    .subtitle { font-family: 'Marcellus', serif; font-size: 10px; letter-spacing: 0.45em; color: var(--gold); text-transform: uppercase; margin-top: 6px; opacity: 0.75; }
+    .main { padding-left: max(18px, env(safe-area-inset-left)); padding-right: max(18px, env(safe-area-inset-right)); padding-top: 18px; padding-bottom: 80px; }
+
+    /* SEARCH */
+    .search-wrap { position: relative; display: flex; align-items: center; background: linear-gradient(180deg, rgba(245,245,220,0.06), rgba(245,245,220,0.02));
+      border: 1px solid var(--cream-ghost); border-radius: 14px; padding: 12px 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 14px -6px var(--shadow-deep);
+    }
+    .search-icon-svg { width: 18px; height: 18px; color: var(--gold); flex-shrink: 0; margin-right: 10px; opacity: 0.85; }
+    .search-input { flex: 1; background: transparent; border: none; outline: none; color: var(--cream); font-family: 'EB Garamond', serif; font-size: 17px; font-style: italic; padding: 2px 0; min-width: 0; }
+    .search-input::placeholder { color: var(--cream-faint); }
+    .search-clear { background: transparent; border: none; color: var(--cream-faint); font-size: 22px; padding: 0 6px; cursor: pointer; display: none; } input[type="search"]::-webkit-search-cancel-button { display: none; }
+    .search-clear.visible { display: block; }
+    .search-status { margin-top: 12px; font-size: 13px; color: var(--cream-faint); text-align: center; min-height: 18px; font-style: italic; }
+    .search-results { margin-top: 14px; display: flex; flex-direction: column; gap: 12px; }
+    .result-card { display: grid; grid-template-columns: 60px 1fr; gap: 14px; padding: 12px;
+      background: linear-gradient(155deg, rgba(78,52,46,0.5) 0%, rgba(46,31,27,0.6) 100%);
+      border: 1px solid rgba(201,169,97,0.12); border-radius: 12px; box-shadow: 0 4px 12px -6px var(--shadow-deep); animation: fadeUp 0.35s ease both;
+    }
+    .result-cover { width: 60px; height: 90px; object-fit: cover; border-radius: 4px; background: var(--wood-dark); }
+    .result-title { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 17px; color: var(--cream); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .result-author { font-size: 13px; font-style: italic; color: var(--cream-soft); margin-top: 2px; }
+    .result-actions { display: flex; gap: 8px; margin-top: 8px; }
+    .btn-action { flex: 1; padding: 7px 10px; font-family: 'Marcellus', serif; font-size: 11px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--cream); background: transparent; border: 1px solid rgba(201,169,97,0.35);
+      border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
+    }
+    .btn-action:active { transform: scale(0.96); background: var(--gold-dim); border-color: var(--gold); }
+
+
+    /* FIXED BOTTOM TAB BAR */
+    .bottom-tab-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+      padding: 10px max(18px, env(safe-area-inset-left)) 0 max(18px, env(safe-area-inset-right));
+      background: linear-gradient(180deg, transparent 0%, rgba(15,20,14,0.92) 18%);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    }
+    /* Extends background to very bottom edge covering safe area */
+    .bottom-tab-bar::after {
+      content: ''; display: block;
+      height: max(env(safe-area-inset-bottom), 16px);
+      background: rgba(15,20,14,0.92);
+      margin: 0 -18px;
+    }
+
+    /* TABS WITH FAB LUPA */
+    .tabs-row { position: relative; display: flex; }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; width: 100%;
+      background: linear-gradient(180deg, rgba(46,31,27,0.92), rgba(27,18,14,0.96));
+      border: 1px solid rgba(201,169,97,0.18); border-radius: 20px;
+      box-shadow: 0 8px 24px -6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(245,245,220,0.05);
+      overflow: hidden;
+    }
+    .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+      padding: 13px 8px 11px; font-family: 'Marcellus', serif; font-size: 10px; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--cream-faint); background: transparent; border: none; cursor: pointer;
+      transition: all 0.25s ease; min-height: 62px; line-height: 1; position: relative;
+    }
+    .tab::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%) scaleX(0); width: 24px; height: 2px; background: var(--gold); border-radius: 2px 2px 0 0; transition: transform 0.25s ease; }
+    .tab.active { color: var(--cream); }
+    .tab.active::after { transform: translateX(-50%) scaleX(1); }
+    .tab .tab-icon { font-size: 22px; transition: transform 0.25s ease, opacity 0.25s ease; opacity: 0.4; display: block; }
+    .tab.active .tab-icon { opacity: 1; transform: scale(1.1) translateY(-1px); }
+    .tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 15px; padding: 0 5px;
+      font-family: 'EB Garamond', serif; font-size: 10px; color: var(--cream); background: rgba(201,169,97,0.2);
+      border: 1px solid var(--gold-dim); border-radius: 8px; margin-top: 2px;
+    }
+    .lupa-fab { position: absolute; left: 50%; top: -18px; transform: translateX(-50%); z-index: 10;
+      width: 54px; height: 54px; border-radius: 50%; cursor: pointer;
+      background: linear-gradient(145deg, var(--wood-light) 0%, var(--wood-dark) 100%);
+      border: 1.5px solid rgba(201,169,97,0.5); color: var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 20px -4px rgba(0,0,0,0.75), 0 0 0 5px var(--green-deep), inset 0 1px 0 rgba(245,245,220,0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+    .lupa-fab:active { transform: translateX(-50%) scale(0.92); box-shadow: 0 3px 10px -4px rgba(0,0,0,0.7), 0 0 0 5px var(--green-deep); }
+    .lupa-fab.has-filter { background: linear-gradient(145deg, #d4a94a, #9a6820); color: var(--wood-dark); border-color: var(--gold-bright); }
+    .lupa-fab svg { width: 21px; height: 21px; stroke-width: 2.3; }
+    
+    .filter-chip-row { display: none; align-items: center; gap: 10px; margin-bottom: 14px; padding: 10px 14px;
+      background: linear-gradient(180deg, rgba(201,169,97,0.08), rgba(201,169,97,0.03)); border: 1px solid var(--gold-dim); border-radius: 12px;
+      animation: fadeUp 0.3s ease both;
+    }
+    .filter-chip-row.visible { display: flex; }
+    .filter-chip-label { font-family: 'Marcellus', serif; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cream-soft); flex-shrink: 0; }
+    .filter-chip-name { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 17px; color: var(--gold-bright); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .filter-chip-x { background: transparent; border: 1px solid var(--gold-dim); color: var(--cream); width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; transition: all 0.2s ease; flex-shrink: 0;
+    }
+    .filter-chip-x:active { transform: scale(0.85); background: var(--gold-dim); }
+
+    /* BOOK CARD */
+    .library-list { display: flex; flex-direction: column; gap: 14px; }
+    .book-card { position: relative; display: grid; grid-template-columns: 80px 1fr; gap: 16px; padding: 14px;
+      background: linear-gradient(160deg, rgba(78,52,46,0.65) 0%, rgba(46,31,27,0.75) 100%);
+      border: 1px solid rgba(201,169,97,0.18); border-radius: 14px; box-shadow: 0 6px 20px -8px var(--shadow-deep);
+      animation: fadeUp 0.4s ease both; transition: transform 0.18s ease, opacity 0.18s ease; will-change: transform;
+      -webkit-user-select: none; user-select: none;
+    }
+    .book-card:active { transform: scale(0.977); opacity: 0.88; }
+    .book-cover { width: 80px; height: 120px; object-fit: cover; border-radius: 5px; background: var(--wood-dark); box-shadow: 0 6px 14px -4px rgba(0,0,0,0.7); }
+    .book-cover-fallback { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--wood-light), var(--wood-dark)); color: var(--gold); font-size: 32px; }
+    .book-info { display: flex; flex-direction: column; min-width: 0; padding-bottom: 28px; }
+    .book-title { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 19px; line-height: 1.2; color: var(--cream); padding-right: 28px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .book-author { font-size: 14px; font-style: italic; color: var(--cream-soft); margin-top: 2px; }
+    .book-year { font-family: 'Marcellus', serif; font-size: 10px; color: var(--gold); opacity: 0.7; margin-top: 4px; letter-spacing: 0.2em; }
+    .book-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; padding-right: 32px; }
+    .book-tag { display: inline-flex; align-items: center; padding: 3px 8px; font-family: 'EB Garamond', serif; font-size: 11px; font-style: italic;
+      color: var(--gold); background: rgba(201,169,97,0.12); border: 1px solid var(--gold-dim); border-radius: 10px; line-height: 1.3;
+    }
+    .book-actions { display: flex; gap: 6px; margin-top: 8px; padding-right: 32px; }
+    .book-btn { padding: 6px 10px; font-family: 'Marcellus', serif; font-size: 10px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--cream-faint); background: transparent; border: 1px solid rgba(201,169,97,0.25);
+      border-radius: 6px; cursor: pointer; transition: all 0.2s ease;
+    }
+    .book-btn:active { transform: scale(0.94); color: var(--gold); border-color: var(--gold); }
+    .book-btn.notes-filled { color: var(--gold); border-color: var(--gold); }
+    .stars { display: flex; gap: 2px; margin-top: 8px; }
+    .star { background: transparent; border: none; padding: 4px 2px; cursor: pointer; font-size: 18px; color: var(--cream-ghost); transition: color 0.18s ease, transform 0.18s ease; }
+    .star.filled { color: var(--gold-bright); text-shadow: 0 0 8px rgba(229,193,88,0.35); }
+    .star:active { transform: scale(1.25); }
+    .google-rating { font-size: 12px; color: var(--gold); margin-top: 6px; font-style: italic; }
+    .book-delete { position: absolute; top: 10px; right: 10px; width: 26px; height: 26px; display: flex; align-items: center;
+      justify-content: center; background: transparent; border: 1px solid var(--cream-ghost); border-radius: 50%;
+      color: var(--cream-faint); font-size: 14px; cursor: pointer; transition: all 0.2s ease; z-index: 2;
+    }
+    .book-delete:active { transform: scale(0.85); background: rgba(180,60,60,0.25); color: #f0c8c8; }
+    .hidden-btn { display: none !important; }
+    .book-tag-btn { position: absolute; bottom: 10px; right: 10px; width: 32px; height: 32px; display: flex; align-items: center;
+      justify-content: center; background: rgba(201,169,97,0.1); border: 1px solid var(--gold-dim); border-radius: 50%;
+      color: var(--gold); cursor: pointer; transition: all 0.2s ease; z-index: 2;
+    }
+    .book-tag-btn:active { transform: scale(0.88); background: var(--gold-dim); }
+    .book-tag-btn svg { width: 15px; height: 15px; }
+    .book-tag-btn.has-tags { background: var(--gold-dim); border-color: var(--gold); }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--cream-faint); }
+    .empty-ornament { font-family: 'Cormorant Garamond', serif; font-size: 38px; color: var(--gold); opacity: 0.4; margin-bottom: 14px; letter-spacing: 0.3em; }
+    .empty-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 18px; color: var(--cream-soft); max-width: 280px; margin: 0 auto; }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 1.5px solid var(--cream-ghost); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* TOAST */
+    .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 24px); transform: translateX(-50%) translateY(20px);
+      background: linear-gradient(180deg, var(--wood-light), var(--wood)); color: var(--cream); font-family: 'EB Garamond', serif;
+      font-style: italic; font-size: 14px; padding: 10px 18px; border: 1px solid var(--gold-dim); border-radius: 10px;
+      box-shadow: 0 8px 24px -8px rgba(0,0,0,0.7); opacity: 0; pointer-events: none; transition: all 0.3s ease; z-index: 500;
+      max-width: 80vw; text-align: center;
+    }
+    .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* BOTTOM SHEETS */
+    .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0); backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px);
+      transition: background 0.3s ease, backdrop-filter 0.3s ease, -webkit-backdrop-filter 0.3s ease; pointer-events: none; z-index: 300;
+    }
+    .sheet-backdrop.open { background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); pointer-events: all; }
+    
+    .sheet { position: fixed; bottom: 0; left: 0; right: 0; z-index: 301;
+      padding-bottom: calc(env(safe-area-inset-bottom) + 24px); padding-left: max(20px, env(safe-area-inset-left)); padding-right: max(20px, env(safe-area-inset-right));
+      background: linear-gradient(180deg, var(--wood) 0%, var(--wood-dark) 100%);
+      border-top: 1px solid rgba(201,169,97,0.3); border-radius: 24px 24px 0 0;
+      box-shadow: 0 -16px 50px -8px rgba(0,0,0,0.7), inset 0 1px 0 rgba(245,245,220,0.06);
+      transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32,0.72,0,1);
+      will-change: transform; max-height: 85vh; overflow-y: hidden; -webkit-overflow-scrolling: touch;
+    }
+    .sheet.open { transform: translateY(0); }
+    .sheet-handle-wrap { padding: 14px 0 8px; display: flex; justify-content: center; cursor: grab; touch-action: none; position: sticky; top: 0; z-index: 1;
+      background: linear-gradient(180deg, var(--wood) 0%, var(--wood) 100%);
+    }
+    .sheet-handle { width: 40px; height: 5px; background: rgba(245,245,220,0.3); border-radius: 3px; }
+    .sheet-content { padding-top: 4px; }
+    .sheet-ornament { font-family: 'Cormorant Garamond', serif; font-size: 13px; letter-spacing: 0.5em; color: var(--gold); opacity: 0.6; margin-bottom: 10px; text-align: center; }
+    .sheet-title { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 24px; color: var(--cream); margin-bottom: 6px; text-align: center; }
+    .sheet-subtitle { font-family: 'EB Garamond', serif; font-style: italic; font-size: 14px; color: var(--cream-soft); text-align: center; margin-bottom: 24px; padding: 0 10px; }
+    
+    .sheet-options-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
+    .sheet-option-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+      padding: 22px 16px 18px; background: rgba(245,245,220,0.04); border: 1px solid rgba(201,169,97,0.18);
+      border-radius: 16px; cursor: pointer; transition: all 0.2s ease; text-align: center;
+    }
+    .sheet-option-card:active { transform: scale(0.96); background: rgba(201,169,97,0.12); border-color: var(--gold); }
+    .sheet-option-card .sheet-option-icon { font-size: 28px; display: block; }
+    .sheet-option-card .sheet-option-title { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 17px; color: var(--cream); }
+    .sheet-option-card .sheet-option-desc { font-family: 'EB Garamond', serif; font-style: italic; font-size: 12px; color: var(--cream-faint); }
+    /* SETTINGS SHEET */
+    .settings-section-label { font-family: 'Marcellus', serif; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+      color: var(--cream-soft); opacity: 0.7; margin: 0 0 10px;
+    }
+    .settings-card { display: flex; align-items: center; gap: 16px; padding: 16px 18px; width: 100%;
+      background: rgba(245,245,220,0.04); border: 1px solid rgba(201,169,97,0.18); border-radius: 14px;
+      cursor: pointer; transition: all 0.2s ease; text-align: left;
+    }
+    .settings-card:active { transform: scale(0.98); background: rgba(201,169,97,0.1); border-color: var(--gold); }
+    .settings-card-icon { width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
+      background: linear-gradient(145deg, rgba(201,169,97,0.18), rgba(201,169,97,0.06));
+      border: 1px solid rgba(201,169,97,0.25); display: flex; align-items: center; justify-content: center; color: var(--gold);
+    }
+    .settings-card-title { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 18px; color: var(--cream); margin-bottom: 3px; }
+    .settings-card-desc { font-family: 'EB Garamond', serif; font-style: italic; font-size: 13px; color: var(--cream-faint); line-height: 1.35; }
+    #btnSettings:hover { color: rgba(201,169,97,0.6) !important; }
+    #btnSettings:active { transform: translateY(-50%) scale(0.9) !important; color: var(--gold) !important; }
+
+    /* SEARCH MODE SHEET */
+    .search-mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .search-mode-card { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 22px 14px 18px;
+      background: rgba(245,245,220,0.04); border: 1px solid rgba(201,169,97,0.18); border-radius: 16px;
+      cursor: pointer; transition: all 0.22s ease; text-align: center; width: 100%;
+    }
+    .search-mode-card:active { transform: scale(0.98); background: rgba(201,169,97,0.1); border-color: var(--gold); }
+    .search-mode-icon-wrap { width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
+      background: linear-gradient(145deg, rgba(201,169,97,0.18), rgba(201,169,97,0.06));
+      border: 1px solid rgba(201,169,97,0.25); display: flex; align-items: center; justify-content: center;
+      color: var(--gold);
+    }
+    .search-mode-label { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 18px; color: var(--cream); line-height: 1.2; margin-bottom: 4px; }
+    .search-mode-desc { font-family: 'EB Garamond', serif; font-style: italic; font-size: 12px; color: var(--cream-faint); line-height: 1.35; }
+    .library-search-results { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; max-height: 320px; overflow-y: auto; }
+    .lib-result-item { display: grid; grid-template-columns: 46px 1fr; gap: 12px; padding: 10px;
+      background: rgba(245,245,220,0.04); border: 1px solid rgba(201,169,97,0.12); border-radius: 12px;
+      animation: fadeUp 0.25s ease both;
+    }
+    .lib-result-cover { width: 46px; height: 68px; object-fit: cover; border-radius: 4px; background: var(--wood-dark); }
+    .lib-result-cover-fb { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--wood-light), var(--wood-dark)); color: var(--gold); font-size: 22px; }
+    .lib-result-title { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 16px; color: var(--cream); line-height: 1.2; }
+    .lib-result-author { font-size: 13px; font-style: italic; color: var(--cream-soft); margin-top: 2px; }
+    .lib-result-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
+    .lib-result-tag { font-size: 10px; font-style: italic; color: var(--gold); background: rgba(201,169,97,0.1); border: 1px solid var(--gold-dim); border-radius: 8px; padding: 2px 6px; }
+    .lib-search-empty { text-align: center; padding: 28px 10px; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 17px; color: var(--cream-faint); }
+    .search-mode-card-text { flex: 1; min-width: 0; }
+
+    .sheet-options { display: flex; flex-direction: column; gap: 10px; }
+    .sheet-option { display: flex; align-items: center; gap: 14px; padding: 16px 18px; background: rgba(245,245,220,0.04);
+      border: 1px solid rgba(201,169,97,0.18); border-radius: 14px; cursor: pointer; transition: all 0.2s ease;
+      font-family: 'EB Garamond', serif; font-size: 16px; color: var(--cream); text-align: left; width: 100%;
+    }
+    .sheet-option:active { transform: scale(0.98); background: rgba(201,169,97,0.12); border-color: var(--gold-dim); }
+    .sheet-option-icon { font-size: 20px; flex-shrink: 0; }
+    .sheet-option-text { flex: 1; min-width: 0; }
+    .sheet-option-title { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 17px; color: var(--cream); }
+    .sheet-option-desc { font-size: 12px; font-style: italic; color: var(--cream-faint); margin-top: 2px; }
+    .sheet-option-chevron { color: var(--cream-faint); opacity: 0.5; }
+
+    .sheet-section-label { font-family: 'Marcellus', serif; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+      color: var(--cream-soft); opacity: 0.7; margin: 18px 0 10px;
+    }
+    
+    .sheet-input-wrap { display: flex; gap: 8px; align-items: center; background: rgba(245,245,220,0.06); border: 1px solid rgba(201,169,97,0.25); border-radius: 12px; padding: 12px 14px; transition: all 0.2s ease; }
+    .sheet-input-wrap:focus-within { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,169,97,0.12); }
+    .sheet-input { flex: 1; background: transparent; border: none; outline: none; color: var(--cream); font-family: 'EB Garamond', serif; font-size: 16px; min-width: 0; }
+    .sheet-input::placeholder { color: var(--cream-faint); font-style: italic; }
+    .sheet-input-btn { background: var(--gold); color: var(--wood-dark); border: none; padding: 8px 14px; border-radius: 8px; font-family: 'Marcellus', serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: all 0.2s ease; flex-shrink: 0; }
+    .sheet-input-btn:active { transform: scale(0.95); opacity: 0.9; }
+    
+    .sheet-textarea { width: 100%; padding: 14px; background: rgba(245,245,220,0.04); border: 1px solid rgba(201,169,97,0.18);
+      border-radius: 12px; color: var(--cream); font-family: 'EB Garamond', serif; font-size: 16px; line-height: 1.5; min-height: 140px; resize: none; outline: none; transition: all 0.2s ease;
+    }
+    .sheet-textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,169,97,0.1); }
+    .sheet-textarea::placeholder { color: var(--cream-faint); font-style: italic; }
+    
+    .sheet-btn-row { display: flex; gap: 10px; margin-top: 18px; }
+    .sheet-btn { flex: 1; padding: 14px 16px; border: none; border-radius: 12px; cursor: pointer; font-family: 'Marcellus', serif;
+      font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; transition: all 0.2s ease; will-change: transform;
+    }
+    .sheet-btn.primary { background: var(--gold); color: var(--wood-dark); box-shadow: 0 4px 14px -4px rgba(201,169,97,0.5); }
+    .sheet-btn.primary:active { transform: scale(0.97); opacity: 0.92; }
+    .sheet-btn.secondary { background: rgba(245,245,220,0.06); border: 1px solid rgba(245,245,220,0.15); color: var(--cream); }
+    .sheet-btn.secondary:active { background: rgba(245,245,220,0.1); transform: scale(0.97); }
+    .sheet-btn.danger { background: rgba(180,60,60,0.18); border: 1px solid rgba(220,100,100,0.35); color: #f0c8c8; }
+    .sheet-btn.danger:active { background: rgba(180,60,60,0.3); transform: scale(0.97); }
+
+    /* TAG CHIPS IN SHEET */
+    .sheet.scrollable { overflow-y: auto; }
+    .tag-pills-wrap { display: flex; flex-wrap: wrap; gap: 8px; max-height: 280px; overflow-y: auto; padding: 4px; }
+    .tag-pill { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; font-family: 'EB Garamond', serif; font-size: 14px;
+      color: var(--cream); background: rgba(245,245,220,0.05); border: 1px solid rgba(201,169,97,0.2); border-radius: 22px;
+      cursor: pointer; transition: all 0.2s ease; user-select: none; -webkit-user-select: none;
+    }
+    .tag-pill:active { transform: scale(0.95); }
+    .tag-pill.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold-bright); }
+    .tag-pill-check { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid rgba(201,169,97,0.3); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: transparent; transition: all 0.2s ease; }
+    .tag-pill.active .tag-pill-check { background: var(--gold); border-color: var(--gold); color: var(--wood-dark); }
+    .tag-empty-msg { padding: 20px; text-align: center; font-style: italic; color: var(--cream-faint); font-size: 14px; }
+
+
+    /* Hide bottom bar when keyboard is open */
+    .keyboard-open .bottom-tab-bar { transform: translateY(120%); transition: transform 0.3s ease; }
+    .bottom-tab-bar { transition: transform 0.3s ease; }
+
+
+    /* FOLDER CARDS */
+    :root {
+      --folder-a: #5C2E1A;   /* caoba rojiza */
+      --folder-a-light: #7A3E28;
+      --folder-b: #163324;   /* verde bosque */
+      --folder-b-light: #1F4A33;
+    }
+    .folder-card { position: relative; border-radius: 16px; overflow: hidden;
+      border: 1px solid rgba(201,169,97,0.22); box-shadow: 0 6px 20px -8px var(--shadow-deep);
+      animation: fadeUp 0.4s ease both; will-change: transform; -webkit-user-select: none; user-select: none;
+      transition: transform 0.18s ease;
+    }
+    .folder-card:active { transform: scale(0.977); }
+    .folder-card.color-a { background: linear-gradient(160deg, var(--folder-a-light) 0%, var(--folder-a) 100%); }
+    .folder-card.color-b { background: linear-gradient(160deg, var(--folder-b-light) 0%, var(--folder-b) 100%); }
+    .folder-header { display: flex; align-items: center; gap: 12px; padding: 16px; cursor: pointer; }
+    .folder-icon-wrap { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      background: rgba(245,245,220,0.1); border: 1px solid rgba(245,245,220,0.12); flex-shrink: 0;
+      color: var(--gold); font-size: 20px;
+    }
+    .folder-info { flex: 1; min-width: 0; }
+    .folder-name { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 19px; color: var(--cream); line-height: 1.2;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .folder-meta { display: flex; align-items: center; gap: 10px; margin-top: 3px; }
+    .folder-count { font-family: 'EB Garamond', serif; font-style: italic; font-size: 13px; color: var(--cream-faint); }
+    .folder-avg { font-size: 12px; color: var(--gold); display: flex; align-items: center; gap: 3px; }
+    .folder-chevron { font-size: 18px; color: var(--cream-soft); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); flex-shrink: 0; margin-top: 22px; }
+    .folder-card.open .folder-chevron { transform: rotate(90deg); }
+    .folder-card-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; }
+    .folder-action-btn { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+      background: transparent; border: 1px solid rgba(245,245,220,0.15); border-radius: 50%;
+      color: rgba(245,245,220,0.4); cursor: pointer; font-size: 13px; transition: all 0.2s ease;
+    }
+    .folder-action-btn:active { transform: scale(0.85); background: rgba(180,60,60,0.25); color: #f0c8c8; border-color: rgba(220,100,100,0.4); }
+    .folder-stars { display: flex; gap: 2px; margin-top: 6px; }
+    .folder-star { font-size: 14px; color: var(--cream-ghost); }
+    .folder-star.filled { color: var(--gold-bright); }
+    .folder-books-wrap { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1); }
+    .folder-card.open .folder-books-wrap { max-height: 9999px; }
+    .folder-books-inner { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 10px; }
+    .folder-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(201,169,97,0.25), transparent); margin: 0 12px 12px; }
+    .folder-empty-msg { padding: 16px; text-align: center; font-family: 'EB Garamond', serif; font-style: italic; font-size: 14px; color: var(--cream-faint); }
+    .book-card.inside-folder { border-color: rgba(201,169,97,0.1); }
+
+    /* + BUTTON */
+    .btn-add-main { position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+      background: transparent; border: none; color: rgba(245,245,220,0.25); cursor: pointer;
+      padding: 8px; border-radius: 10px; transition: all 0.3s ease;
+      display: flex; align-items: center; justify-content: center; font-size: 26px; line-height: 1; font-weight: 300;
+    }
+    .btn-add-main:active { transform: translateY(-50%) scale(0.88); color: var(--gold); }
+
+    /* FOLDER MOVE SHEET SELECT */
+    .folder-select-item { display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+      border-radius: 14px; cursor: pointer; transition: all 0.22s ease; border: 1px solid transparent;
+    }
+    .folder-select-item.color-a { background: linear-gradient(135deg, var(--folder-a-light), var(--folder-a)); border-color: rgba(201,169,97,0.2); }
+    .folder-select-item.color-b { background: linear-gradient(135deg, var(--folder-b-light), var(--folder-b)); border-color: rgba(201,169,97,0.2); }
+    .folder-select-item:active { transform: scale(0.97); border-color: rgba(201,169,97,0.5); }
+    .folder-select-icon { width: 36px; height: 36px; border-radius: 9px; background: rgba(245,245,220,0.1); border: 1px solid rgba(245,245,220,0.12); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .folder-select-name { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 18px; color: var(--cream); flex: 1; }
+    .folder-select-count { font-size: 12px; font-style: italic; color: var(--cream-soft); }
+
+
+
+    /* LEFT CORNER BUTTONS */
+    .book-eye-btn { position: absolute; bottom: 10px; left: 10px; width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(201,169,97,0.1); border: 1px solid var(--gold-dim);
+      border-radius: 50%; color: var(--gold); cursor: pointer;
+      transition: all 0.2s ease; z-index: 2;
+    }
+    .book-eye-btn:active { transform: scale(0.88); background: var(--gold-dim); }
+    .book-eye-btn svg { width: 15px; height: 15px; }
+    /* STATUS PILL */
+    .book-status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px;
+      border-radius: 10px; font-family: 'Marcellus', serif; font-size: 9px; letter-spacing: 0.12em;
+      text-transform: uppercase; margin-top: 5px; border: 1px solid transparent;
+    }
+    .book-status-pill.reading { background: rgba(201,169,97,0.15); border-color: rgba(201,169,97,0.35); color: var(--gold-bright); }
+    .book-status-pill.read    { background: rgba(40,120,60,0.2);  border-color: rgba(60,160,80,0.35);  color: #7ecf94; }
+    .book-status-pill.paused  { background: rgba(245,245,220,0.07); border-color: rgba(245,245,220,0.15); color: var(--cream-faint); }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .reading .status-dot { background: var(--gold-bright); }
+    .read    .status-dot { background: #7ecf94; }
+    .paused  .status-dot { background: var(--cream-faint); }
+
+    /* BOOK DETAIL MODAL (tap cover) */
+    .detail-sheet { position: fixed; bottom: 0; left: 0; right: 0; z-index: 302;
+      padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
+      background: linear-gradient(180deg, var(--wood) 0%, var(--wood-dark) 100%);
+      border-top: 1px solid rgba(201,169,97,0.3); border-radius: 24px 24px 0 0;
+      box-shadow: 0 -16px 50px -8px rgba(0,0,0,0.7), inset 0 1px 0 rgba(245,245,220,0.06);
+      transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32,0.72,0,1);
+      will-change: transform; max-height: 90vh; overflow-y: auto;
+    }
+    .detail-sheet.open { transform: translateY(0); }
+    .detail-cover-wrap { padding: 28px 0 20px; display: flex; justify-content: center; }
+    .detail-cover { width: 110px; height: 162px; object-fit: cover; border-radius: 8px;
+      box-shadow: 0 12px 30px -8px rgba(0,0,0,0.8); border: 1px solid rgba(201,169,97,0.2);
+    }
+    .detail-cover-fb { display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--wood-light), var(--wood-dark)); color: var(--gold); font-size: 42px;
+      border: 1px solid rgba(201,169,97,0.25);
+    }
+    .detail-body { padding: 0 24px 8px; }
+    .detail-title { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 24px; color: var(--cream); text-align: center; line-height: 1.2; margin-bottom: 6px; }
+    .detail-author { font-size: 15px; font-style: italic; color: var(--cream-soft); text-align: center; margin-bottom: 20px; }
+    .detail-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(201,169,97,0.3), transparent); margin: 16px 0; }
+    .detail-section-title { font-family: 'Marcellus', serif; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--cream-soft); opacity: 0.7; margin-bottom: 12px; }
+    .detail-status-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .detail-status-btn { flex: 1; padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(201,169,97,0.2);
+      background: rgba(245,245,220,0.04); cursor: pointer; transition: all 0.2s ease; text-align: center;
+      font-family: 'Marcellus', serif; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cream-faint);
+    }
+    .detail-status-btn:active { transform: scale(0.97); }
+    .detail-status-btn.active-reading { background: rgba(201,169,97,0.18); border-color: var(--gold); color: var(--gold-bright); }
+    .detail-status-btn.active-read    { background: rgba(40,120,60,0.2); border-color: rgba(60,160,80,0.4); color: #7ecf94; }
+    .detail-status-btn.active-paused  { background: rgba(245,245,220,0.1); border-color: rgba(245,245,220,0.25); color: var(--cream-soft); }
+    .detail-status-icon { font-size: 18px; display: block; margin-bottom: 5px; }
+    .detail-dates { display: flex; flex-direction: column; gap: 10px; }
+    .detail-date-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px;
+      background: rgba(245,245,220,0.04); border: 1px solid rgba(201,169,97,0.12); border-radius: 12px;
+    }
+    .detail-date-label { display: flex; align-items: center; gap: 8px; font-family: 'EB Garamond', serif; font-size: 14px; color: var(--cream-soft); }
+    .detail-date-icon { font-size: 16px; }
+    .detail-date-value { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 16px; color: var(--cream); }
+    .detail-date-value.empty { color: var(--cream-faint); font-style: italic; font-weight: 400; font-size: 14px; }
+    .detail-date-input { background: transparent; border: none; outline: none; color: var(--cream);
+      font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 600; cursor: pointer;
+      -webkit-appearance: none; text-align: right;
+    }
+    .detail-duration { padding: 12px 14px; background: rgba(201,169,97,0.08); border: 1px solid var(--gold-dim);
+      border-radius: 12px; font-family: 'EB Garamond', serif; font-style: italic; font-size: 14px;
+      color: var(--gold); text-align: center;
+    }
+    .detail-close-btn { display: block; width: calc(100% - 48px); margin: 18px auto 0; padding: 14px;
+      background: rgba(245,245,220,0.06); border: 1px solid rgba(245,245,220,0.15); border-radius: 12px;
+      color: var(--cream); font-family: 'Marcellus', serif; font-size: 12px; letter-spacing: 0.16em;
+      text-transform: uppercase; cursor: pointer; transition: all 0.2s ease;
+    }
+    .detail-close-btn:active { background: rgba(245,245,220,0.1); }
+
+    /* EDIT SHEET */
+    .edit-cover-preview { width: 90px; height: 132px; border-radius: 8px; margin: 0 auto 18px;
+      background: linear-gradient(135deg, var(--wood-light), var(--wood-dark));
+      border: 2px dashed rgba(201,169,97,0.35); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 6px; cursor: pointer;
+      transition: all 0.2s ease; overflow: hidden; position: relative;
+    }
+    .edit-cover-preview img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes cardExit { 0% { opacity: 1; transform: translateX(0); max-height: 250px; margin-bottom: 14px; } 35% { opacity: 0; transform: translateX(10px); } 100% { opacity: 0; transform: translateX(10px); max-height: 0; margin-bottom: 0; padding: 0; border-width: 0; } }
+    .book-card.exiting { animation: cardExit 0.3s cubic-bezier(0.4,0,1,1) forwards; pointer-events: none; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div style="position: relative; text-align: center;">
+      <button id="btnSettings" aria-label="Ajustes" style="position:absolute;left:0;top:50%;transform:translateY(-50%);background:transparent;border:none;color:rgba(245,245,220,0.18);cursor:pointer;padding:8px;border-radius:10px;transition:all 0.3s ease;display:flex;align-items:center;justify-content:center;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <button id="btnAddMain" class="btn-add-main" aria-label="Crear">+</button>
+      <h1 class="title">Celebook</h1>
+      <div class="subtitle">Mi Biblioteca</div>
+    </div>
+  </header>
+
+  <main class="main">
+    <section>
+      <div class="search-wrap">
+        <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" class="search-input" placeholder="Título, autor o ISBN…" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button id="searchClear" class="search-clear">×</button>
+      </div>
+      <div id="searchStatus" class="search-status"></div>
+      <div id="searchResults" class="search-results"></div>
+    </section>
+
+    <section class="library-section" style="margin-top: 10px;">
+      <div id="filterChipRow" class="filter-chip-row">
+        <span class="filter-chip-label">Filtro</span>
+        <span class="filter-chip-name" id="filterChipName"></span>
+        <button class="filter-chip-x" id="filterChipX">×</button>
+      </div>
+      <div id="libraryList" class="library-list"></div>
+    </section>
+  </main>
+
+
+  <!-- SCROLL TO TOP -->
+  <button id="scrollTopBtn" aria-label="Volver al inicio" style="
+    position: fixed; right: 20px; bottom: calc(env(safe-area-inset-bottom) + 115px); z-index: 199;
+    width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(201,169,97,0.4);
+    background: linear-gradient(145deg, rgba(78,52,46,0.95), rgba(27,18,14,0.97));
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    color: var(--gold); display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px -4px rgba(0,0,0,0.6);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateY(10px);
+    cursor: pointer;
+  ">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="18 15 12 9 6 15"/>
+    </svg>
+  </button>
+
+  <div id="sheetSettings" class="sheet">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div class="sheet-content">
+      <div class="sheet-ornament">✦ ✦ ✦</div>
+      <div class="sheet-title">Ajustes</div>
+      <div class="sheet-subtitle">Gestiona tus datos de Celebook</div>
+
+      <div class="settings-section-label">Exportar datos</div>
+      <button class="settings-card" id="btnExport">
+        <div class="settings-card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </div>
+        <div class="settings-card-text">
+          <div class="settings-card-title">Exportar biblioteca</div>
+          <div class="settings-card-desc">Descarga un archivo JSON con todos tus libros, etiquetas y notas</div>
+        </div>
+      </button>
+
+      <div class="settings-section-label" style="margin-top: 18px;">Importar datos</div>
+      <button class="settings-card" id="btnImport">
+        <div class="settings-card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 5 17 10"/>
+            <line x1="12" y1="5" x2="12" y2="17"/>
+          </svg>
+        </div>
+        <div class="settings-card-text">
+          <div class="settings-card-title">Importar biblioteca</div>
+          <div class="settings-card-desc">Carga un archivo JSON exportado previamente para restaurar tus datos</div>
+        </div>
+      </button>
+      <input type="file" id="importFileInput" accept=".json" style="display:none;">
+
+      <div style="margin-top: 24px; padding: 14px; background: rgba(201,169,97,0.06); border: 1px solid rgba(201,169,97,0.15); border-radius: 12px;">
+        <div style="font-family: 'EB Garamond', serif; font-style: italic; font-size: 13px; color: var(--cream-faint); line-height: 1.5; text-align: center;">
+          ⚠️ Al importar se reemplazarán todos los datos actuales.<br>Exporta primero si no quieres perder tu biblioteca.
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="sheetCreate" class="sheet">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div class="sheet-content">
+      <div class="sheet-ornament">✦ ✦ ✦</div>
+      <div class="sheet-title">Crear</div>
+      <div class="sheet-subtitle">¿Qué quieres agregar?</div>
+      <div class="search-mode-cards">
+        <button class="search-mode-card" id="optCreateBook">
+          <div class="search-mode-icon-wrap"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+          <div class="search-mode-label">Libro</div>
+          <div class="search-mode-desc">Busca y agrega un libro a tu colección</div>
+        </button>
+        <button class="search-mode-card" id="optCreateFolder">
+          <div class="search-mode-icon-wrap"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="search-mode-label">Carpeta</div>
+          <div class="search-mode-desc">Organiza tus libros en una nueva carpeta</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sheetNewFolder" class="sheet">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div class="sheet-content">
+      <div class="sheet-ornament">❦ ❦ ❦</div>
+      <div class="sheet-title">Nueva carpeta</div>
+      <div class="sheet-subtitle">Dale un nombre a tu nueva carpeta</div>
+      <div class="sheet-input-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" style="flex-shrink:0;opacity:0.7;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <input type="text" id="newFolderNameInput" class="sheet-input" placeholder="Ej: Favoritos, Por leer…" maxlength="40" autocomplete="off">
+      </div>
+      <div class="sheet-btn-row">
+        <button id="btnConfirmNewFolder" class="sheet-btn primary">Crear carpeta</button>
+        <button id="btnCancelNewFolder" class="sheet-btn secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sheetMoveToFolder" class="sheet scrollable">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div class="sheet-content">
+      <div class="sheet-ornament">❦ ❦ ❦</div>
+      <div class="sheet-title" id="moveFolderTitle">Mover a carpeta</div>
+      <div class="sheet-subtitle" id="moveFolderSubtitle">Elige dónde guardar este libro</div>
+      <div id="folderSelectList" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <div class="sheet-btn-row" style="margin-top: 16px;">
+        <button id="btnMoveNoFolder" class="sheet-btn secondary">Sin carpeta</button>
+        <button id="btnCancelMoveFolder" class="sheet-btn secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sheetDeleteFolder" class="sheet">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div class="sheet-content">
+      <div class="sheet-ornament">✦ ✦ ✦</div>
+      <div class="sheet-title">Eliminar carpeta</div>
+      <div class="sheet-subtitle" id="deleteFolderName"></div>
+      <div style="font-family:'EB Garamond',serif;font-style:italic;font-size:14px;color:var(--cream-faint);text-align:center;padding:0 10px;">Los libros dentro quedarán sin carpeta.</div>
+      <div class="sheet-btn-row" style="margin-top:22px;">
+        <button id="btnConfirmDeleteFolder" class="sheet-btn danger">Eliminar</button>
+        <button id="btnCancelDeleteFolder" class="sheet-btn secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sheetManualBook" class="sheet scrollable">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div class="sheet-content">
+      <div class="sheet-ornament">❦ ❦ ❦</div>
+      <div class="sheet-title">Nuevo libro</div>
+      <div class="sheet-subtitle">Agrega un libro manualmente</div>
+
+      <!-- PHOTO -->
+      <div id="manualCoverPreview" style="
+        width: 100px; height: 148px; border-radius: 8px; margin: 0 auto 18px;
+        background: linear-gradient(135deg, var(--wood-light), var(--wood-dark));
+        border: 2px dashed rgba(201,169,97,0.35); display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 6px; cursor: pointer;
+        transition: all 0.2s ease; overflow: hidden; position: relative;
+      ">
+        <svg id="manualCoverIcon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5" opacity="0.7"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span id="manualCoverLabel" style="font-family:'Marcellus',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);opacity:0.7;">Foto</span>
+        <img id="manualCoverImg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;" alt="">
+      </div>
+      <input type="file" id="manualCoverInput" accept="image/*" style="display:none;">
+
+      <!-- TITLE -->
+      <div class="sheet-section-label">Título <span style="color:rgba(240,100,100,0.8);">*</span></div>
+      <div class="sheet-input-wrap" style="margin-bottom:14px;">
+        <input type="text" id="manualTitle" class="sheet-input" placeholder="Nombre del libro…" maxlength="120" autocomplete="off">
+      </div>
+
+      <!-- AUTHOR -->
+      <div class="sheet-section-label">Autor <span style="opacity:0.5;">(opcional)</span></div>
+      <div class="sheet-input-wrap" style="margin-bottom:14px;">
+        <input type="text" id="manualAuthor" class="sheet-input" placeholder="Nombre del autor…" maxlength="80" autocomplete="off">
+      </div>
+
+      <!-- YEAR -->
+      <div class="sheet-section-label">Año <span style="opacity:0.5;">(opcional)</span></div>
+      <div class="sheet-input-wrap" style="margin-bottom:6px;">
+        <input type="number" id="manualYear" class="sheet-input" placeholder="Ej: 2024" min="1000" max="2099" autocomplete="off">
+      </div>
+
+      <div class="sheet-btn-row" style="margin-top:20px;">
+        <button id="btnConfirmManualBook" class="sheet-btn primary">Agregar libro</button>
+        <button id="btnCancelManualBook" class="sheet-btn secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- DETAIL SHEET (tap cover) -->
+  <div id="detailSheetBackdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);z-index:301;opacity:0;pointer-events:none;transition:opacity 0.3s ease;"></div>
+  <div id="sheetDetail" class="detail-sheet">
+    <div class="sheet-handle-wrap" id="detailHandle"><div class="sheet-handle"></div></div>
+    <div class="detail-cover-wrap">
+      <div id="detailCoverEl" class="detail-cover detail-cover-fb">📖</div>
+    </div>
+    <div class="detail-body">
+      <div class="detail-title" id="detailTitle"></div>
+      <div class="detail-author" id="detailAuthor"></div>
+      <div class="detail-divider"></div>
+      <div class="detail-section-title">Estado de lectura</div>
+      <div class="detail-status-row">
+        <button class="detail-status-btn" data-status="reading"><span class="detail-status-icon">📖</span>Leyendo</button>
+        <button class="detail-status-btn" data-status="read"><span class="detail-status-icon">✓</span>Leído</button>
+        <button class="detail-status-btn" data-status="paused"><span class="detail-status-icon">⏸</span>Pausado</button>
+      </div>
+      <div class="detail-divider"></div>
+      <div class="detail-section-title">Fechas</div>
+      <div id="detailDatesBody" class="detail-dates"></div>
+      <div id="detailDuration" class="detail-duration" style="display:none;margin-top:12px;"></div>
+    </div>
+    <button class="detail-close-btn" id="btnCloseDetail">Cerrar</button>
+  </div>
+
+  <!-- EDIT SHEET (pencil, manual books only) -->
+  <div id="sheetEdit" class="sheet scrollable">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div class="sheet-content">
+      <div class="sheet-ornament">✏️</div>
+      <div class="sheet-title">Editar libro</div>
+      <div class="edit-cover-preview" id="editCoverPreview">
+        <svg id="editCoverIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5" opacity="0.7"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span id="editCoverLabel" style="font-family:'Marcellus',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);opacity:0.7;">Cambiar foto</span>
+        <img id="editCoverImg" style="display:none;" alt="">
+      </div>
+      <input type="file" id="editCoverInput" accept="image/*" style="display:none;">
+      <div class="sheet-section-label">Título <span style="color:rgba(240,100,100,0.8);">*</span></div>
+      <div class="sheet-input-wrap" style="margin-bottom:14px;">
+        <input type="text" id="editTitle" class="sheet-input" maxlength="120" autocomplete="off">
+      </div>
+      <div class="sheet-section-label">Autor <span style="opacity:0.5;">(opcional)</span></div>
+      <div class="sheet-input-wrap" style="margin-bottom:14px;">
+        <input type="text" id="editAuthor" class="sheet-input" maxlength="80" autocomplete="off">
+      </div>
+      <div class="sheet-section-label">Año <span style="opacity:0.5;">(opcional)</span></div>
+      <div class="sheet-input-wrap" style="margin-bottom:6px;">
+        <input type="number" id="editYear" class="sheet-input" min="1000" max="2099" autocomplete="off">
+      </div>
+      <div class="sheet-btn-row" style="margin-top:20px;">
+        <button id="btnSaveEdit" class="sheet-btn primary">Guardar</button>
+        <button id="btnCancelEdit" class="sheet-btn secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM SHEETS -->
+
+  <!-- FIXED BOTTOM TAB BAR -->
+  <nav class="bottom-tab-bar">
+    <div class="tabs-row">
+      <div class="tabs">
+        <button class="tab active" data-tab="owned">
+          <span class="tab-icon">❦</span>
+          <span>Mis Libros</span>
+          <span class="tab-count" id="countOwned">0</span>
+        </button>
+        <button class="tab" data-tab="wishlist">
+          <span class="tab-icon">✦</span>
+          <span>Deseos</span>
+          <span class="tab-count" id="countWishlist">0</span>
+        </button>
+      </div>
+      <button id="lupaBtn" class="lupa-fab" aria-label="Filtrar por etiqueta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <div id="sheetBackdrop" class="sheet-backdrop"></div>
+  
+  <div id="sheetListChoice" class="sheet">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div class="sheet-content">
+      <div class="sheet-ornament">✦ ✦ ✦</div>
+      <div class="sheet-title">Agregar libro</div>
+      <div class="sheet-subtitle">¿Dónde quieres guardarlo?</div>
+      <div class="sheet-options-row">
+        <button class="sheet-option-card" id="optMisLibros">
+          <span class="sheet-option-icon">📚</span>
+          <div class="sheet-option-title">Mis Libros</div>
+          <div class="sheet-option-desc">En mi colección</div>
+        </button>
+        <button class="sheet-option-card" id="optDeseos">
+          <span class="sheet-option-icon">✦</span>
+          <div class="sheet-option-title">Deseos</div>
+          <div class="sheet-option-desc">Quiero leerlo</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sheetTags" class="sheet scrollable">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div class="sheet-content">
+      <div class="sheet-ornament">🏷️</div>
+      <div class="sheet-title">Etiquetas</div>
+      <div class="sheet-subtitle" id="tagsBookTitle"></div>
+      <div class="sheet-section-label" id="existingTagsLabel">Etiquetas existentes</div>
+      <div class="tag-pills-wrap" id="tagsList"></div>
+      <div class="sheet-section-label">Crear nueva etiqueta</div>
+      <div class="sheet-input-wrap">
+        <input type="text" id="newTagName" class="sheet-input" placeholder="Ej: poesía, ficción, favoritos…" maxlength="30">
+        <button id="btnCreateTag" class="sheet-input-btn">Crear</button>
+      </div>
+      <div class="sheet-btn-row">
+        <button id="btnDoneTags" class="sheet-btn primary">Listo</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sheetSearchMode" class="sheet">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div class="sheet-content">
+      <div class="sheet-ornament">✦ ✦ ✦</div>
+      <div class="sheet-title" id="searchModeTitle">Buscar en Mis Libros</div>
+      <div class="sheet-subtitle">¿Cómo quieres buscar?</div>
+      <div class="search-mode-cards">
+        <button class="search-mode-card" id="btnModeText">
+          <div class="search-mode-icon-wrap">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <div class="search-mode-label">Título, autor o ISBN</div>
+          <div class="search-mode-desc">Busca por el nombre del libro, su autor o código ISBN</div>
+        </button>
+        <button class="search-mode-card" id="btnModeTags">
+          <div class="search-mode-icon-wrap">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          </div>
+          <div class="search-mode-label">Por etiqueta</div>
+          <div class="search-mode-desc">Filtra tus libros según las etiquetas que les asignaste</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sheetSearchText" class="sheet scrollable">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div class="sheet-content">
+      <div class="sheet-ornament">✦ ✦ ✦</div>
+      <div class="sheet-title">Buscar libro</div>
+      <div class="sheet-subtitle" id="searchTextSubtitle">En tu colección</div>
+      <div class="sheet-input-wrap" style="margin-bottom: 0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" style="flex-shrink:0; opacity:0.7;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="librarySearchInput" class="sheet-input" placeholder="Título, autor, ISBN…" autocomplete="off" autocorrect="off">
+        <button id="btnClearLibrarySearch" class="sheet-input-btn" style="background:transparent; border:none; color:var(--cream-faint); font-size:20px; padding:0 4px; display:none;">×</button>
+      </div>
+      <div id="librarySearchResults" class="library-search-results"></div>
+      <div class="sheet-btn-row">
+        <button id="btnCloseSearchText" class="sheet-btn secondary">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sheetFilterTags" class="sheet scrollable">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div class="sheet-content">
+      <div class="sheet-ornament">✦ ✦ ✦</div>
+      <div class="sheet-title">Filtrar por etiqueta</div>
+      <div class="sheet-subtitle" id="filterTagsSubtitle">Selecciona una etiqueta</div>
+      <div class="tag-pills-wrap" id="filterTagsList"></div>
+      <div class="sheet-btn-row">
+        <button id="btnClearFilter" class="sheet-btn secondary">Mostrar todos</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sheetNotes" class="sheet">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div class="sheet-content">
+      <div class="sheet-ornament">📝</div>
+      <div class="sheet-title">Notas</div>
+      <div class="sheet-subtitle" id="notesBookTitle"></div>
+      <textarea id="notesText" class="sheet-textarea" placeholder="Escribe tus impresiones, citas favoritas, análisis…"></textarea>
+      <div class="sheet-btn-row">
+        <button id="btnSaveNotes" class="sheet-btn primary">Guardar</button>
+        <button id="btnCancelNotes" class="sheet-btn secondary">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sheetDeleteBook" class="sheet">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div class="sheet-content">
+      <div class="sheet-ornament">✦ ✦ ✦</div>
+      <div class="sheet-title">Eliminar libro</div>
+      <div class="sheet-subtitle" id="deleteBookName"></div>
+      <div class="sheet-btn-row" style="margin-top: 22px;">
+        <button id="btnConfirmDelete" class="sheet-btn danger">Eliminar</button>
+        <button id="btnCancelDelete" class="sheet-btn secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+  const STORAGE_KEY = 'celeBook_v1';
+  const state = { books: [], folders: [], allTags: [], activeTab: 'owned', activeTagFilter: null, searchTimer: null,
+    _pendingBook: null, _editingBookId: null, _editingTagsBookId: null, _deletingBookId: null, _deletingFolderId: null, _movingBookId: null };
+
+  function loadState() { 
+    try { 
+      const raw = localStorage.getItem(STORAGE_KEY); 
+      if (raw) { 
+        const p = JSON.parse(raw); 
+        state.books = (p.books || []).map(b => ({ ...b, tags: b.tags || [], folderId: b.folderId || null, status: b.status || null, dateStart: b.dateStart || null, pauseLog: b.pauseLog || [], dateEnd: b.dateEnd || null, isManual: b.isManual || String(b.id || '').startsWith('manual_') }));
+        state.folders = p.folders || [];
+        state.allTags = p.allTags || [];
+        state.activeTab = p.activeTab || 'owned';
+        if (state.allTags.length === 0) {
+          const tagSet = new Set();
+          state.books.forEach(b => (b.tags || []).forEach(t => tagSet.add(t)));
+          state.allTags = Array.from(tagSet);
+        }
+      } 
+    } catch(e) {} 
+  }
+  function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ books: state.books, folders: state.folders, allTags: state.allTags, activeTab: state.activeTab })); } catch(e) {} }
+  function fixThumbnail(url) { return url ? url.replace(/^http:/, 'https:').replace('&edge=curl','').replace('zoom=1','zoom=2') : null; }
+  function escapeHtml(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+  function findBook(id) { return state.books.find(b => b.id === id); }
+  function haptic() { if (navigator.vibrate) navigator.vibrate(8); }
+  let toastTimer = null;
+  function toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('visible'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('visible'), 2200); }
+
+  function detectIsbn(q) {
+    const clean = q.replace(/[-\s]/g, '');
+    return /^(97[89])?\d{9}[\dX]$/.test(clean) ? clean : null;
+  }
+
+  async function searchBooks(query) {
+    const apiKey = 'AIzaSyBzk7tQj6pVkgYPkRu7X1mDiZVfSFod9AY';
+    const isbn = detectIsbn(query);
+    const q = isbn ? `isbn:${isbn}` : query;
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=15&printType=books&key=${apiKey}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Error');
+    const data = await res.json();
+    if (!data.items) return [];
+    return data.items.map(item => {
+      const v = item.volumeInfo || {};
+      return {
+        id: item.id, title: v.title || 'Sin título', authors: v.authors || ['Autor desconocido'],
+        thumbnail: fixThumbnail(v.imageLinks?.thumbnail || v.imageLinks?.smallThumbnail),
+        year: v.publishedDate ? v.publishedDate.substring(0,4) : null,
+        googleRating: v.averageRating || null, googleRatingCount: v.ratingsCount || 0
+      };
+    });
+  }
+
+  function renderSearchResults(results) {
+    const container = document.getElementById('searchResults');
+    container.innerHTML = '';
+    results.forEach(book => {
+      const existing = findBook(book.id);
+      const card = document.createElement('article');
+      card.className = 'result-card';
+      const coverHtml = book.thumbnail 
+        ? `<img class="result-cover" src="${escapeHtml(book.thumbnail)}" alt="">` 
+        : `<div class="result-cover book-cover-fallback">📖</div>`;
+      card.innerHTML = `${coverHtml}<div><div class="result-title">${escapeHtml(book.title)}</div><div class="result-author">${escapeHtml(book.authors.join(', '))}</div><div class="result-actions"><button class="btn-action">${existing ? '✓ Agregado' : '+ Agregar'}</button></div></div>`;
+      if (!existing) {
+        card.querySelector('.btn-action').addEventListener('click', () => { haptic(); openListChoice(book); });
+      }
+      container.appendChild(card);
+    });
+  }
+
+  /* ── BOTTOM SHEET SYSTEM ── */
+  const backdrop = document.getElementById('sheetBackdrop');
+  const allSheets = ['sheetListChoice', 'sheetTags', 'sheetSearchMode', 'sheetSearchText', 'sheetFilterTags', 'sheetNotes', 'sheetDeleteBook', 'sheetSettings', 'sheetCreate', 'sheetNewFolder', 'sheetMoveToFolder', 'sheetDeleteFolder', 'sheetManualBook', 'sheetEdit'];
+  
+  function openSheet(id) {
+    document.body.classList.add('modal-open');
+    backdrop.classList.add('open');
+    const sheet = document.getElementById(id);
+    sheet.classList.add('open');
+    setupSheetDrag(sheet);
+  }
+  function closeSheets() {
+    backdrop.classList.remove('open');
+    allSheets.forEach(id => {
+      const sheet = document.getElementById(id);
+      sheet.classList.remove('open');
+      sheet.style.transform = '';
+      sheet.style.transition = '';
+    });
+    document.body.classList.remove('modal-open');
+    state._pendingBook = null;
+    state._editingBookId = null;
+    state._editingTagsBookId = null;
+    state._deletingBookId = null;
+  }
+  function setupSheetDrag(sheet) {
+    const handleWrap = sheet.querySelector('.sheet-handle-wrap');
+    let dragStartY = 0, dragCurrentY = 0, isDragging = false;
+    handleWrap.ontouchstart = (e) => { dragStartY = e.touches[0].clientY; isDragging = true; sheet.style.transition = 'none'; };
+    handleWrap.ontouchmove = (e) => {
+      if (!isDragging) return;
+      dragCurrentY = e.touches[0].clientY;
+      const delta = Math.max(0, dragCurrentY - dragStartY);
+      sheet.style.transform = `translateY(${delta}px)`;
+    };
+    handleWrap.ontouchend = () => {
+      if (!isDragging) return;
+      isDragging = false;
+      const delta = dragCurrentY - dragStartY;
+      sheet.style.transition = 'transform 0.4s cubic-bezier(0.32,0.72,0,1)';
+      if (delta > 100) closeSheets();
+      else sheet.style.transform = 'translateY(0)';
+    };
+  }
+
+  /* ── ADD BOOK FLOW ── */
+  function openListChoice(book) { state._pendingBook = book; openSheet('sheetListChoice'); }
+  document.getElementById('optMisLibros').addEventListener('click', () => { haptic(); addBookDirect(state._pendingBook, 'owned'); closeSheets(); });
+  document.getElementById('optDeseos').addEventListener('click', () => { haptic(); addBookDirect(state._pendingBook, 'wishlist'); closeSheets(); });
+
+  function addBookDirect(book, list) {
+    const id = book.id || ('manual_' + Date.now());
+    const newBook = { ...book, id, list, rating: 0, tags: [], notes: '', folderId: null, isManual: false, status: null, dateStart: null, pauseLog: [], dateEnd: null, addedAt: Date.now() };
+    state.books.push(newBook);
+    saveState(); updateCounts();
+    if (state.activeTab !== list) {
+      state.activeTab = list;
+      state.activeTagFilter = null;
+      updateFilterChip();
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === list));
+      saveState();
+    }
+    renderLibrary(); clearSearch();
+
+    // If owned and folders exist, ask about folder
+    if (list === 'owned' && state.folders.length > 0) {
+      setTimeout(() => {
+        state._movingBookId = newBook.id;
+        const selectList = document.getElementById('folderSelectList');
+        selectList.innerHTML = '';
+        state.folders.forEach((folder, idx) => {
+          const colorClass = idx % 2 === 0 ? 'color-a' : 'color-b';
+          const count = state.books.filter(b => b.folderId === folder.id).length;
+          const item = document.createElement('button');
+          item.className = `folder-select-item ${colorClass}`;
+          item.innerHTML = `<span class="folder-select-icon">📁</span><span class="folder-select-name">${escapeHtml(folder.name)}</span><span class="folder-select-count">${count} libro${count!==1?'s':''}</span>`;
+          item.addEventListener('click', () => {
+            haptic();
+            const b = findBook(state._movingBookId);
+            if (b) { b.folderId = folder.id; saveState(); renderLibrary(); }
+            closeSheets(); toast('Agregado a "' + folder.name + '" ❦');
+          });
+          selectList.appendChild(item);
+        });
+        openSheet('sheetMoveToFolder');
+      }, 350);
+    } else {
+      toast(list === 'wishlist' ? 'Agregado a Deseos ✦' : 'Agregado a Mis Libros ❦');
+    }
+  }
+
+  /* ── TAGS ── */
+  function openTagsSheet(bookId) {
+    state._editingTagsBookId = bookId;
+    const book = findBook(bookId);
+    document.getElementById('tagsBookTitle').textContent = book.title;
+    renderTagsSheet();
+    document.getElementById('newTagName').value = '';
+    openSheet('sheetTags');
+  }
+  function renderTagsSheet() {
+    const book = findBook(state._editingTagsBookId);
+    if (!book) return;
+    const list = document.getElementById('tagsList');
+    const label = document.getElementById('existingTagsLabel');
+    list.innerHTML = '';
+    if (state.allTags.length === 0) {
+      label.style.display = 'none';
+      list.innerHTML = '<div class="tag-empty-msg">Aún no hay etiquetas. Crea la primera abajo.</div>';
+    } else {
+      label.style.display = '';
+      state.allTags.forEach(tag => {
+        const isActive = book.tags.includes(tag);
+        const pill = document.createElement('button');
+        pill.className = 'tag-pill' + (isActive ? ' active' : '');
+        pill.innerHTML = `<span class="tag-pill-check">✓</span><span>${escapeHtml(tag)}</span>`;
+        pill.addEventListener('click', () => {
+          haptic();
+          if (isActive) book.tags = book.tags.filter(t => t !== tag);
+          else book.tags.push(tag);
+          saveState();
+          renderTagsSheet();
+          updateCardTags(book);
+        });
+        list.appendChild(pill);
+      });
+    }
+  }
+  function updateCardTags(book) {
+    const card = document.querySelector(`.book-card[data-id="${book.id}"]`);
+    if (!card) return;
+    const tagsContainer = card.querySelector('.book-tags');
+    const tagBtn = card.querySelector('.book-tag-btn');
+    if (book.tags.length > 0) {
+      if (tagsContainer) {
+        tagsContainer.innerHTML = book.tags.slice(0, 4).map(t => `<span class="book-tag">${escapeHtml(t)}</span>`).join('');
+      } else {
+        const newTagsDiv = document.createElement('div');
+        newTagsDiv.className = 'book-tags';
+        newTagsDiv.innerHTML = book.tags.slice(0, 4).map(t => `<span class="book-tag">${escapeHtml(t)}</span>`).join('');
+        const yearEl = card.querySelector('.book-year');
+        const authorEl = card.querySelector('.book-author');
+        const ref = yearEl || authorEl;
+        if (ref) ref.parentNode.insertBefore(newTagsDiv, ref.nextSibling);
+      }
+      if (tagBtn) tagBtn.classList.add('has-tags');
+    } else {
+      if (tagsContainer) tagsContainer.remove();
+      if (tagBtn) tagBtn.classList.remove('has-tags');
+    }
+  }
+  document.getElementById('btnCreateTag').addEventListener('click', () => {
+    const name = document.getElementById('newTagName').value.trim();
+    if (!name) { toast('Escribe un nombre'); return; }
+    if (state.allTags.includes(name)) { toast('Ya existe esa etiqueta'); return; }
+    state.allTags.push(name);
+    const book = findBook(state._editingTagsBookId);
+    if (book && !book.tags.includes(name)) book.tags.push(name);
+    saveState();
+    document.getElementById('newTagName').value = '';
+    renderTagsSheet();
+    updateCardTags(book);
+    haptic();
+  });
+  document.getElementById('btnDoneTags').addEventListener('click', closeSheets);
+
+  /* ── FILTER BY TAG ── */
+  document.getElementById('lupaBtn').addEventListener('click', () => { haptic(); openSearchModeSheet(); });
+
+  function openSearchModeSheet() {
+    const label = state.activeTab === 'owned' ? 'Mis Libros' : 'Deseos';
+    document.getElementById('searchModeTitle').textContent = 'Buscar en ' + label;
+    openSheet('sheetSearchMode');
+  }
+
+  document.getElementById('btnModeText').addEventListener('click', () => {
+    haptic();
+    closeSheets();
+    setTimeout(() => {
+      const label = state.activeTab === 'owned' ? 'Mis Libros' : 'Deseos';
+      document.getElementById('searchTextSubtitle').textContent = 'En ' + label;
+      document.getElementById('librarySearchInput').value = '';
+      document.getElementById('librarySearchResults').innerHTML = '';
+      document.getElementById('btnClearLibrarySearch').style.display = 'none';
+      openSheet('sheetSearchText');
+      setTimeout(() => document.getElementById('librarySearchInput').focus(), 400);
+    }, 350);
+  });
+
+  document.getElementById('btnModeTags').addEventListener('click', () => {
+    haptic();
+    closeSheets();
+    setTimeout(() => openFilterTagsSheet(), 350);
+  });
+
+  function openFilterTagsSheet() {
+    const tabLabel = state.activeTab === 'owned' ? 'Mis Libros' : 'Deseos';
+    document.getElementById('filterTagsSubtitle').textContent = 'Mostrando libros de ' + tabLabel;
+    const list = document.getElementById('filterTagsList');
+    list.innerHTML = '';
+    const tabBooks = state.books.filter(b => b.list === state.activeTab);
+    const tagsInUse = new Set();
+    tabBooks.forEach(b => (b.tags || []).forEach(t => tagsInUse.add(t)));
+    if (tagsInUse.size === 0) {
+      list.innerHTML = '<div class="tag-empty-msg">No hay etiquetas en ' + tabLabel + ' aún.</div>';
+    } else {
+      Array.from(tagsInUse).sort().forEach(tag => {
+        const isActive = state.activeTagFilter === tag;
+        const count = tabBooks.filter(b => (b.tags || []).includes(tag)).length;
+        const pill = document.createElement('button');
+        pill.className = 'tag-pill' + (isActive ? ' active' : '');
+        pill.innerHTML = `<span class="tag-pill-check">✓</span><span>${escapeHtml(tag)} <span style="opacity: 0.5; font-size: 11px;">(${count})</span></span>`;
+        pill.addEventListener('click', () => {
+          haptic();
+          state.activeTagFilter = isActive ? null : tag;
+          updateFilterChip();
+          renderLibrary();
+          closeSheets();
+        });
+        list.appendChild(pill);
+      });
+    }
+    openSheet('sheetFilterTags');
+  }
+
+  /* ── LIBRARY TEXT SEARCH ── */
+  document.getElementById('librarySearchInput').addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    const clearBtn = document.getElementById('btnClearLibrarySearch');
+    clearBtn.style.display = q ? 'block' : 'none';
+    const results = document.getElementById('librarySearchResults');
+    if (!q) { results.innerHTML = ''; return; }
+    const books = state.books.filter(b => b.list === state.activeTab);
+    const isIsbnQ = /^[\d\-\s]{9,}$/.test(q);
+    const matched = books.filter(b => {
+      const title = (b.title || '').toLowerCase();
+      const authors = (b.authors || []).join(' ').toLowerCase();
+      const isbn = (b.id || '').toLowerCase();
+      return title.includes(q) || authors.includes(q) || (isIsbnQ && isbn.includes(q.replace(/[-\s]/g,'')));
+    });
+    results.innerHTML = '';
+    if (!matched.length) {
+      results.innerHTML = '<div class="lib-search-empty">Sin resultados para "' + escapeHtml(q) + '"</div>';
+      return;
+    }
+    matched.forEach(book => {
+      const item = document.createElement('div');
+      item.className = 'lib-result-item';
+      const cover = book.thumbnail
+        ? `<img class="lib-result-cover" src="${escapeHtml(book.thumbnail)}" alt="">`
+        : `<div class="lib-result-cover lib-result-cover-fb">📖</div>`;
+      const tagsHtml = (book.tags && book.tags.length)
+        ? `<div class="lib-result-tags">${book.tags.map(t=>`<span class="lib-result-tag">${escapeHtml(t)}</span>`).join('')}</div>` : '';
+      item.innerHTML = `${cover}<div>
+        <div class="lib-result-title">${escapeHtml(book.title)}</div>
+        <div class="lib-result-author">${escapeHtml((book.authors||[]).join(', '))}</div>
+        ${tagsHtml}
+      </div>`;
+      results.appendChild(item);
+    });
+  });
+
+  document.getElementById('btnClearLibrarySearch').addEventListener('click', () => {
+    document.getElementById('librarySearchInput').value = '';
+    document.getElementById('librarySearchResults').innerHTML = '';
+    document.getElementById('btnClearLibrarySearch').style.display = 'none';
+    document.getElementById('librarySearchInput').focus();
+  });
+
+  document.getElementById('btnCloseSearchText').addEventListener('click', closeSheets);
+  document.getElementById('btnClearFilter').addEventListener('click', () => {
+    haptic();
+    state.activeTagFilter = null;
+    updateFilterChip();
+    renderLibrary();
+    closeSheets();
+  });
+  function updateFilterChip() {
+    const chip = document.getElementById('filterChipRow');
+    const lupa = document.getElementById('lupaBtn');
+    if (state.activeTagFilter) {
+      chip.classList.add('visible');
+      document.getElementById('filterChipName').textContent = state.activeTagFilter;
+      lupa.classList.add('has-filter');
+    } else {
+      chip.classList.remove('visible');
+      lupa.classList.remove('has-filter');
+    }
+  }
+  document.getElementById('filterChipX').addEventListener('click', () => {
+    haptic();
+    state.activeTagFilter = null;
+    updateFilterChip();
+    renderLibrary();
+  });
+
+  /* ── NOTES ── */
+  function openNotesSheet(bookId) {
+    state._editingBookId = bookId;
+    const book = findBook(bookId);
+    document.getElementById('notesText').value = book.notes || '';
+    document.getElementById('notesBookTitle').textContent = book.title;
+    openSheet('sheetNotes');
+  }
+  document.getElementById('btnSaveNotes').addEventListener('click', () => {
+    const book = findBook(state._editingBookId);
+    if (book) {
+      book.notes = document.getElementById('notesText').value;
+      saveState();
+      const card = document.querySelector(`[data-id="${book.id}"]`);
+      if (card) {
+        const btn = card.querySelector('[data-action="notes"]');
+        if (btn) btn.classList.toggle('notes-filled', book.notes.length > 0);
+      }
+    }
+    closeSheets();
+    toast('Notas guardadas');
+  });
+  document.getElementById('btnCancelNotes').addEventListener('click', closeSheets);
+
+  /* ── DELETE ── */
+  function openDeleteBookSheet(bookId) {
+    state._deletingBookId = bookId;
+    const book = findBook(bookId);
+    document.getElementById('deleteBookName').textContent = book.title;
+    openSheet('sheetDeleteBook');
+  }
+  document.getElementById('btnConfirmDelete').addEventListener('click', () => {
+    const id = state._deletingBookId;
+    state.books = state.books.filter(b => b.id !== id);
+    saveState(); updateCounts();
+    const card = document.querySelector(`[data-id="${id}"]`);
+    if (card) animateOut(card);
+    closeSheets();
+    toast('Eliminado');
+  });
+  document.getElementById('btnCancelDelete').addEventListener('click', closeSheets);
+
+  /* ── CARDS ── */
+  function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchStatus').textContent = '';
+    document.getElementById('searchResults').innerHTML = '';
+    document.getElementById('searchClear').classList.remove('visible');
+    document.body.classList.remove('searching');
+    const libSection = document.querySelector('.library-section');
+    const tabBar = document.querySelector('.bottom-tab-bar');
+    if (libSection) libSection.style.display = '';
+    if (tabBar) tabBar.style.transform = '';
+  }
+  function updateCounts() { document.getElementById('countOwned').textContent = state.books.filter(b => b.list === 'owned').length; document.getElementById('countWishlist').textContent = state.books.filter(b => b.list === 'wishlist').length; }
+  function animateOut(card, cb) { card.classList.add('exiting'); card.addEventListener('animationend', () => { card.remove(); if(cb) cb(); else { if (!document.querySelector('.book-card:not(.exiting)')) renderLibrary(); } }, { once: true }); }
+
+  function statusPillHtml(book) {
+    if (!book.status || book.list !== 'owned') return '';
+    const map = { reading: ['reading','📖','Leyendo'], read: ['read','✓','Leído'], paused: ['paused','⏸','Pausado'] };
+    const [cls, icon, label] = map[book.status] || [];
+    if (!cls) return '';
+    return `<div class="book-status-pill ${cls}"><span class="status-dot"></span>${label}</div>`;
+  }
+
+  function buildCard(book) {
+    const card = document.createElement('article');
+    card.className = 'book-card';
+    card.dataset.id = book.id;
+
+
+    const coverStyle = book.isManual ? 'cursor:pointer;' : '';
+    const coverAttr = book.isManual ? 'data-action="edit"' : '';
+    const coverHtml = book.thumbnail 
+      ? `<img class="book-cover" src="${escapeHtml(book.thumbnail)}" alt="" ${coverAttr} style="${coverStyle}">` 
+      : `<div class="book-cover book-cover-fallback" ${coverAttr} style="${coverStyle}">📖</div>`;
+    const yearHtml = book.year ? `<div class="book-year">${escapeHtml(book.year)}</div>` : '';
+    const tagsHtml = (book.tags && book.tags.length > 0) 
+      ? `<div class="book-tags">${book.tags.slice(0, 4).map(t => `<span class="book-tag">${escapeHtml(t)}</span>`).join('')}</div>` 
+      : '';
+    
+    let ratingHtml = '';
+    if (book.list === 'owned') {
+      ratingHtml = `<div class="stars">${[1,2,3,4,5].map(n=>`<button class="star ${n<=(book.rating||0)?'filled':''}" data-rating="${n}">★</button>`).join('')}</div>`;
+    } else if (book.list === 'wishlist' && book.googleRating) {
+      ratingHtml = `<div class="google-rating">★ ${book.googleRating.toFixed(1)} <span style="opacity: 0.7;">(${book.googleRatingCount} crítico${book.googleRatingCount !== 1 ? 's' : ''})</span></div>`;
+    }
+
+    const actionsHtml = book.list === 'owned'
+      ? `<button class="book-btn ${book.notes ? 'notes-filled' : ''}" data-action="notes">📝 Notas</button>`
+      : `<button class="book-btn" data-action="to-mis">→ Mis Libros</button>`;
+
+    const hasTagsClass = (book.tags && book.tags.length > 0) ? ' has-tags' : '';
+    const currentFolder = book.folderId ? state.folders.find(f => f.id === book.folderId) : null;
+    const folderBtnClass = (currentFolder ? ' has-tags' : '') + (book.list !== 'owned' ? ' hidden-btn' : '');
+
+    // Corner left button - eye only
+    const leftBtnsHtml = book.list === 'owned' ? `<button class="book-eye-btn" aria-label="Estado">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    </button>` : '';
+
+    card.innerHTML = `${leftBtnsHtml}${coverHtml}<div class="book-info">
+      <div class="book-title">${escapeHtml(book.title)}</div>
+      <div class="book-author">${escapeHtml((book.authors||[]).join(', '))}</div>
+      ${yearHtml}
+      ${statusPillHtml(book)}
+      ${tagsHtml}
+      ${ratingHtml}
+      <div class="book-actions">${actionsHtml}</div>
+    </div>
+    <button class="book-delete">×</button>
+    <button class="book-folder-btn${folderBtnClass}" aria-label="Carpeta" style="position:absolute;bottom:10px;right:48px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:rgba(201,169,97,0.1);border:1px solid var(--gold-dim);border-radius:50%;color:var(--gold);cursor:pointer;transition:all 0.2s ease;z-index:2;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    </button>
+    <button class="book-tag-btn${hasTagsClass}" aria-label="Etiquetas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+    </button>`;
+
+    // Cover tap - use specific selector to avoid matching other data-action buttons
+    const coverEl = card.querySelector('[data-action="edit"], [data-action="detail"]');
+    if (coverEl) {
+      coverEl.addEventListener('click', (e) => {
+        e.stopPropagation(); haptic();
+        const action = coverEl.dataset.action;
+        if (action === 'edit') openEditSheet(book.id);
+        else if (action === 'detail') openDetailSheet(book.id);
+      });
+    }
+
+    if (book.list === 'owned') {
+      card.querySelectorAll('.star').forEach(star => {
+        star.addEventListener('click', (e) => {
+          e.stopPropagation(); haptic();
+          const r = parseInt(star.dataset.rating, 10);
+          book.rating = book.rating === r ? 0 : r;
+          saveState();
+          star.parentElement.querySelectorAll('.star').forEach(s => s.classList.toggle('filled', parseInt(s.dataset.rating, 10) <= book.rating));
+        });
+      });
+      card.querySelector('[data-action="notes"]').addEventListener('click', (e) => { e.stopPropagation(); haptic(); openNotesSheet(book.id); });
+      const eyeBtn = card.querySelector('.book-eye-btn');
+      if (eyeBtn) eyeBtn.addEventListener('click', (e) => { e.stopPropagation(); haptic(); openDetailSheet(book.id); });
+    } else {
+      card.querySelector('[data-action="to-mis"]').addEventListener('click', (e) => {
+        e.stopPropagation(); haptic();
+        book.list = 'owned';
+        saveState(); updateCounts();
+        state.activeTab = 'owned';
+        state.activeTagFilter = null;
+        updateFilterChip();
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'owned'));
+        saveState(); renderLibrary(); toast('Movido a Mis Libros ❦');
+      });
+    }
+
+    card.querySelector('.book-delete').addEventListener('click', (e) => { e.stopPropagation(); haptic(); openDeleteBookSheet(book.id); });
+    card.querySelector('.book-tag-btn').addEventListener('click', (e) => { e.stopPropagation(); haptic(); openTagsSheet(book.id); });
+    if (book.list === 'owned') {
+      card.querySelector('.book-folder-btn').addEventListener('click', (e) => { e.stopPropagation(); haptic(); openMoveFolderSheet(book.id); });
+    }
+    return card;
+  }
+
+  function calcFolderAvg(folderId) {
+    const rated = state.books.filter(b => b.list==='owned' && b.folderId===folderId && b.rating > 0);
+    if (!rated.length) return 0;
+    return rated.reduce((s,b) => s + b.rating, 0) / rated.length;
+  }
+
+  function buildFolderCard(folder, colorIndex, allBooks) {
+    const booksInFolder = allBooks.filter(b => b.folderId === folder.id);
+    const avg = calcFolderAvg(folder.id);
+    const avgStr = avg > 0 ? avg.toFixed(1) : null;
+    const colorClass = colorIndex % 2 === 0 ? 'color-a' : 'color-b';
+    const isOpen = folder.expanded !== false;
+
+    const card = document.createElement('div');
+    card.className = `folder-card ${colorClass}${isOpen ? ' open' : ''}`;
+    card.dataset.folderId = folder.id;
+
+    const starsHtml = [1,2,3,4,5].map(n => `<span class="folder-star ${avg >= n ? 'filled' : (avg >= n-0.5 ? 'filled' : '')}">★</span>`).join('');
+
+    card.innerHTML = `
+      <div class="folder-header">
+        <div class="folder-icon-wrap">📁</div>
+        <div class="folder-info">
+          <div class="folder-name">${escapeHtml(folder.name)}</div>
+          <div class="folder-meta">
+            <span class="folder-count">${booksInFolder.length} libro${booksInFolder.length!==1?'s':''}</span>
+            ${avgStr ? `<span class="folder-avg">★ ${avgStr}</span>` : ''}
+          </div>
+          ${avg > 0 ? `<div class="folder-stars">${starsHtml}</div>` : ''}
+        </div>
+        <span class="folder-chevron">›</span>
+      </div>
+      <div class="folder-card-actions">
+        <button class="folder-action-btn" data-action="delete-folder">×</button>
+      </div>
+      <div class="folder-books-wrap">
+        <div class="folder-divider"></div>
+        <div class="folder-books-inner" id="folderBooks_${folder.id}"></div>
+      </div>
+    `;
+
+    // Toggle open/close
+    card.querySelector('.folder-header').addEventListener('click', (e) => {
+      if (e.target.closest('.folder-action-btn')) return;
+      haptic();
+      card.classList.toggle('open');
+      folder.expanded = card.classList.contains('open');
+      saveState();
+    });
+
+    // Delete folder
+    card.querySelector('[data-action="delete-folder"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      haptic();
+      state._deletingFolderId = folder.id;
+      document.getElementById('deleteFolderName').textContent = folder.name;
+      openSheet('sheetDeleteFolder');
+    });
+
+    // Render books inside
+    const booksInner = card.querySelector(`#folderBooks_${folder.id}`);
+    if (booksInFolder.length === 0) {
+      booksInner.innerHTML = '<div class="folder-empty-msg">Esta carpeta está vacía</div>';
+    } else {
+      booksInFolder.sort((a,b) => (b.addedAt||0)-(a.addedAt||0)).forEach(b => {
+        const bc = buildCard(b);
+        bc.classList.add('inside-folder');
+        booksInner.appendChild(bc);
+      });
+    }
+
+    return card;
+  }
+
+  function renderLibrary() {
+    const list = document.getElementById('libraryList');
+    list.innerHTML = '';
+    let filtered = state.books.filter(b => b.list === state.activeTab);
+    if (state.activeTagFilter) filtered = filtered.filter(b => (b.tags||[]).includes(state.activeTagFilter));
+
+    if (state.activeTab === 'wishlist') {
+      filtered.sort((a,b) => (b.addedAt||0)-(a.addedAt||0));
+      if (!filtered.length) {
+        list.innerHTML = `<div class="empty-state"><div class="empty-ornament">✦ ✦ ✦</div><div class="empty-text">${state.activeTagFilter ? 'No hay libros con esa etiqueta.' : 'Tu lista de deseos está vacía.'}</div></div>`;
+      } else { filtered.forEach(b => list.appendChild(buildCard(b))); }
+      return;
+    }
+
+    // OWNED: folders first, loose books last
+    const ownedBooks = state.books.filter(b => b.list === 'owned');
+    const looseBooks = filtered.filter(b => !b.folderId).sort((a,b) => (b.addedAt||0)-(a.addedAt||0));
+    const hasAnything = state.folders.length > 0 || looseBooks.length > 0;
+
+    if (!hasAnything) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-ornament">❦ ❦ ❦</div><div class="empty-text">${state.activeTagFilter ? 'No hay libros con esa etiqueta.' : 'Aún no hay libros en tu biblioteca.'}</div></div>`;
+      return;
+    }
+
+    // Render folders
+    state.folders.forEach((folder, idx) => {
+      list.appendChild(buildFolderCard(folder, idx, ownedBooks));
+    });
+
+    // Render loose books at the bottom
+    if (looseBooks.length > 0) {
+      if (state.folders.length > 0) {
+        const sep = document.createElement('div');
+        sep.style.cssText = 'font-family:Marcellus,serif;font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--cream-faint);opacity:0.6;padding:10px 4px 6px;';
+        sep.textContent = 'Sin carpeta';
+        list.appendChild(sep);
+      }
+      looseBooks.forEach(b => list.appendChild(buildCard(b)));
+    }
+  }
+
+  /* ── TABS & SEARCH ── */
+  function setupTabs() {
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        if (target === state.activeTab) return;
+        state.activeTab = target;
+        state.activeTagFilter = null;
+        updateFilterChip();
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === target));
+        haptic(); saveState(); renderLibrary();
+      });
+    });
+  }
+  function setupSearch() {
+    const input = document.getElementById('searchInput');
+    const clear = document.getElementById('searchClear');
+    // Hide library + tab bar while searching
+    input.addEventListener('focus', () => {
+      // nothing on focus
+
+    });
+    input.addEventListener('blur', () => {
+
+    });
+    input.addEventListener('input', () => {
+      const q = input.value.trim();
+      clear.classList.toggle('visible', q.length > 0);
+      const libSection = document.querySelector('.library-section');
+      const tabBar = document.querySelector('.bottom-tab-bar');
+      if (q.length > 0) {
+        libSection.style.display = 'none';
+        tabBar.style.transform = 'translateY(120%)';
+      } else {
+        libSection.style.display = '';
+        tabBar.style.transform = '';
+      }
+      clearTimeout(state.searchTimer);
+      if (!q) { document.getElementById('searchStatus').textContent = ''; document.getElementById('searchResults').innerHTML = ''; return; }
+      const isIsbn = detectIsbn(q);
+      document.getElementById('searchStatus').innerHTML = isIsbn
+        ? '<span class="spinner"></span> Buscando por ISBN…'
+        : '<span class="spinner"></span> Buscando…';
+      state.searchTimer = setTimeout(async () => {
+        try {
+          const results = await searchBooks(q);
+          document.getElementById('searchStatus').textContent = results.length ? `${results.length} resultado${results.length>1?'s':''}` : 'Sin resultados';
+          renderSearchResults(results);
+        } catch(e) { document.getElementById('searchStatus').textContent = 'Error de conexión'; }
+      }, 400);
+    });
+    clear.addEventListener('click', () => { input.value = ''; input.dispatchEvent(new Event('input')); input.focus(); });
+  }
+
+  backdrop.addEventListener('click', closeSheets);
+
+  // Enter key to create tag
+  document.getElementById('newTagName').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btnCreateTag').click(); }
+  });
+
+
+  /* ── SCROLL TO TOP ── */
+  (function() {
+    const btn = document.getElementById('scrollTopBtn');
+    const BOOK_HEIGHT_APPROX = 160; // px per book card approx
+    const THRESHOLD = BOOK_HEIGHT_APPROX * 15; // ~15 books scrolled
+
+    window.addEventListener('scroll', () => {
+      const scrolled = window.scrollY > THRESHOLD;
+      btn.style.opacity = scrolled ? '1' : '0';
+      btn.style.pointerEvents = scrolled ? 'all' : 'none';
+      btn.style.transform = scrolled ? 'translateY(0)' : 'translateY(10px)';
+    }, { passive: true });
+
+    btn.addEventListener('click', () => {
+      haptic();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  })();
+
+
+
+
+
+  /* ── DETAIL SHEET ── */
+  let _detailBookId = null;
+
+  function today() { return new Date().toISOString().slice(0,10); }
+  function formatDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso + 'T12:00:00');
+    return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  function daysBetween(a, b) {
+    if (!a || !b) return null;
+    return Math.round((new Date(b) - new Date(a)) / 86400000);
+  }
+
+  // Smart state machine — never loses dates
+  function applyStatus(book, newStatus) {
+    if (!book.pauseLog) book.pauseLog = [];
+    const prev = book.status;
+    const t = today();
+
+    if (newStatus === 'reading') {
+      if (!book.dateStart) book.dateStart = t;            // first time ever
+      if (prev === 'paused') {                             // resuming
+        const last = book.pauseLog[book.pauseLog.length - 1];
+        if (last && !last.resumed) last.resumed = t;
+      }
+      book.status = 'reading';
+
+    } else if (newStatus === 'paused') {
+      if (!book.dateStart) book.dateStart = t;
+      book.pauseLog.push({ paused: t, resumed: null });
+      book.status = 'paused';
+
+    } else if (newStatus === 'read') {
+      if (!book.dateStart) book.dateStart = t;
+      if (prev === 'paused') {                            // close open pause
+        const last = book.pauseLog[book.pauseLog.length - 1];
+        if (last && !last.resumed) last.resumed = t;
+      }
+      book.dateEnd = t;
+      book.status = 'read';
+    }
+  }
+
+  function renderDetailDates(book) {
+    const body = document.getElementById('detailDatesBody');
+    if (!body) return;
+    body.innerHTML = '';
+    if (!book.dateStart && !book.status) { body.innerHTML = '<div style="text-align:center;font-style:italic;color:var(--cream-faint);font-size:14px;padding:10px 0;">Sin registros aún</div>'; return; }
+
+    const rows = [];
+    if (book.dateStart) rows.push({ icon:'📅', label:'Inicio de lectura', date: book.dateStart });
+
+    (book.pauseLog || []).forEach((p, i) => {
+      rows.push({ icon:'⏸', label: `Pausa ${book.pauseLog.length > 1 ? i+1 : ''}`.trim(), date: p.paused });
+      if (p.resumed) rows.push({ icon:'▶️', label:'Reanudación', date: p.resumed });
+    });
+
+    if (book.dateEnd) rows.push({ icon:'🏁', label:'Fin de lectura', date: book.dateEnd });
+
+    rows.forEach(row => {
+      const el = document.createElement('div');
+      el.className = 'detail-date-row';
+      el.innerHTML = `<span class="detail-date-label"><span class="detail-date-icon">${row.icon}</span>${row.label}</span><span class="detail-date-value">${formatDate(row.date)}</span>`;
+      body.appendChild(el);
+    });
+
+    // Duration
+    const dur = document.getElementById('detailDuration');
+    if (book.status === 'read' && book.dateStart && book.dateEnd) {
+      const days = daysBetween(book.dateStart, book.dateEnd);
+      dur.style.display = ''; dur.textContent = `Leído en ${days} día${days!==1?'s':''}`;
+    } else { dur.style.display = 'none'; }
+  }
+
+  function openDetailSheet(bookId) {
+    _detailBookId = bookId;
+    const book = findBook(bookId);
+    // Cover
+    const coverWrap = document.getElementById('detailCoverEl');
+    if (book.thumbnail) {
+      coverWrap.outerHTML = `<img id="detailCoverEl" class="detail-cover" src="${book.thumbnail}" alt="">`;
+    } else {
+      const el = document.getElementById('detailCoverEl');
+      el.className = 'detail-cover detail-cover-fb'; el.textContent = '📖';
+    }
+    document.getElementById('detailTitle').textContent = book.title;
+    document.getElementById('detailAuthor').textContent = (book.authors||[]).join(', ');
+    renderDetailStatusBtns(book);
+    renderDetailDates(book);
+    const bd = document.getElementById('detailSheetBackdrop');
+    bd.style.opacity = '1'; bd.style.pointerEvents = 'all';
+    const sheet = document.getElementById('sheetDetail');
+    sheet.classList.add('open');
+    const handle = document.getElementById('detailHandle');
+    let sy = 0, cy = 0, drag = false;
+    handle.ontouchstart = (e) => { sy = e.touches[0].clientY; drag = true; sheet.style.transition = 'none'; };
+    handle.ontouchmove = (e) => { if (!drag) return; cy = e.touches[0].clientY; sheet.style.transform = `translateY(${Math.max(0,cy-sy)}px)`; };
+    handle.ontouchend = () => { if (!drag) return; drag = false; sheet.style.transition = 'transform 0.4s cubic-bezier(0.32,0.72,0,1)'; if (cy-sy > 100) closeDetailSheet(); else sheet.style.transform = ''; };
+  }
+
+  function renderDetailStatusBtns(book) {
+    document.querySelectorAll('.detail-status-btn').forEach(btn => {
+      const s = btn.dataset.status;
+      btn.className = 'detail-status-btn' + (book.status === s ? ` active-${s}` : '');
+    });
+  }
+
+  function closeDetailSheet() {
+    const bd = document.getElementById('detailSheetBackdrop');
+    bd.style.opacity = '0'; bd.style.pointerEvents = 'none';
+    document.getElementById('sheetDetail').classList.remove('open');
+    document.getElementById('sheetDetail').style.transform = '';
+    saveState(); renderLibrary();
+    _detailBookId = null;
+  }
+
+  document.getElementById('btnCloseDetail').addEventListener('click', closeDetailSheet);
+  document.getElementById('detailSheetBackdrop').addEventListener('click', closeDetailSheet);
+
+  document.querySelectorAll('.detail-status-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      haptic();
+      const book = findBook(_detailBookId);
+      if (!book) return;
+      applyStatus(book, btn.dataset.status);
+      renderDetailStatusBtns(book);
+      renderDetailDates(book);
+    });
+  });
+
+  /* ── EDIT SHEET (manual books) ── */
+  let _editCoverBase64 = null;
+
+  function openEditSheet(bookId) {
+    state._editingBookId = bookId;
+    const book = findBook(bookId);
+    _editCoverBase64 = book.thumbnail || null;
+    document.getElementById('editTitle').value = book.title || '';
+    document.getElementById('editAuthor').value = (book.authors || []).filter(a => a !== 'Autor desconocido').join(', ');
+    document.getElementById('editYear').value = book.year || '';
+    const img = document.getElementById('editCoverImg');
+    const icon = document.getElementById('editCoverIcon');
+    const label = document.getElementById('editCoverLabel');
+    if (book.thumbnail) { img.src = book.thumbnail; img.style.display = 'block'; icon.style.display = 'none'; label.style.display = 'none'; }
+    else { img.style.display = 'none'; icon.style.display = ''; label.style.display = ''; }
+    openSheet('sheetEdit');
+  }
+
+  document.getElementById('editCoverPreview').addEventListener('click', () => document.getElementById('editCoverInput').click());
+  document.getElementById('editCoverInput').addEventListener('change', function() {
+    const file = this.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img2 = new Image();
+      img2.onload = () => {
+        const MAX_W = 300, MAX_H = 450;
+        let w = img2.width, h = img2.height;
+        const ratio = Math.min(MAX_W/w, MAX_H/h, 1);
+        w = Math.round(w*ratio); h = Math.round(h*ratio);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img2, 0, 0, w, h);
+        _editCoverBase64 = canvas.toDataURL('image/jpeg', 0.82);
+        const previewImg = document.getElementById('editCoverImg');
+        previewImg.src = _editCoverBase64; previewImg.style.display = 'block';
+        document.getElementById('editCoverIcon').style.display = 'none';
+        document.getElementById('editCoverLabel').style.display = 'none';
+        document.getElementById('editCoverPreview').style.border = '2px solid rgba(201,169,97,0.5)';
+      };
+      img2.src = e.target.result;
+    };
+    reader.readAsDataURL(file); this.value = '';
+  });
+
+  document.getElementById('btnSaveEdit').addEventListener('click', () => {
+    const book = findBook(state._editingBookId);
+    if (!book) return;
+    const title = document.getElementById('editTitle').value.trim();
+    if (!title) { toast('El título es obligatorio'); return; }
+    const author = document.getElementById('editAuthor').value.trim();
+    const year = document.getElementById('editYear').value.trim();
+    book.title = title;
+    book.authors = author ? [author] : ['Autor desconocido'];
+    book.year = year || null;
+    book.thumbnail = _editCoverBase64;
+    saveState(); renderLibrary(); closeSheets(); toast('Libro actualizado ✦'); haptic();
+  });
+  document.getElementById('btnCancelEdit').addEventListener('click', closeSheets);
+
+  /* ── MANUAL BOOK ── */
+  let _manualCoverBase64 = null;
+
+  function openManualBookSheet() {
+    _manualCoverBase64 = null;
+    document.getElementById('manualTitle').value = '';
+    document.getElementById('manualAuthor').value = '';
+    document.getElementById('manualYear').value = '';
+    document.getElementById('manualCoverImg').style.display = 'none';
+    document.getElementById('manualCoverIcon').style.display = '';
+    document.getElementById('manualCoverLabel').style.display = '';
+    openSheet('sheetManualBook');
+  }
+
+  // Tap cover preview to pick image
+  document.getElementById('manualCoverPreview').addEventListener('click', () => {
+    document.getElementById('manualCoverInput').click();
+  });
+
+  document.getElementById('manualCoverInput').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        // Resize to max 300x450 using canvas
+        const MAX_W = 300, MAX_H = 450;
+        let w = img.width, h = img.height;
+        const ratio = Math.min(MAX_W / w, MAX_H / h, 1);
+        w = Math.round(w * ratio); h = Math.round(h * ratio);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        _manualCoverBase64 = canvas.toDataURL('image/jpeg', 0.82);
+        // Show preview
+        const previewImg = document.getElementById('manualCoverImg');
+        previewImg.src = _manualCoverBase64;
+        previewImg.style.display = 'block';
+        document.getElementById('manualCoverIcon').style.display = 'none';
+        document.getElementById('manualCoverLabel').style.display = 'none';
+        document.getElementById('manualCoverPreview').style.border = '2px solid rgba(201,169,97,0.5)';
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    this.value = '';
+  });
+
+  document.getElementById('btnConfirmManualBook').addEventListener('click', () => {
+    const title = document.getElementById('manualTitle').value.trim();
+    if (!title) { toast('El título es obligatorio'); document.getElementById('manualTitle').focus(); return; }
+    const author = document.getElementById('manualAuthor').value.trim();
+    const year = document.getElementById('manualYear').value.trim();
+    const id = 'manual_' + Date.now();
+    const book = {
+      id, title,
+      authors: author ? [author] : ['Autor desconocido'],
+      thumbnail: _manualCoverBase64 || null,
+      year: year || null,
+      googleRating: null, googleRatingCount: 0,
+      list: state.activeTab === 'wishlist' ? 'wishlist' : 'owned',
+      rating: 0, tags: [], notes: '', folderId: null, isManual: true, status: null, dateStart: null, pauseLog: [], dateEnd: null, addedAt: Date.now()
+    };
+    state.books.push(book);
+    saveState(); updateCounts(); renderLibrary();
+    haptic();
+
+    // If owned and there are folders, ask which folder
+    if (state.activeTab !== 'wishlist' && state.folders.length > 0) {
+      closeSheets();
+      setTimeout(() => {
+        state._movingBookId = id;
+        // Build folder select sheet with "skip" option
+        const selectList = document.getElementById('folderSelectList');
+        selectList.innerHTML = '';
+        state.folders.forEach((folder, idx) => {
+          const colorClass = idx % 2 === 0 ? 'color-a' : 'color-b';
+          const count = state.books.filter(b => b.folderId === folder.id).length;
+          const item = document.createElement('button');
+          item.className = `folder-select-item ${colorClass}`;
+          item.innerHTML = `<span class="folder-select-icon">📁</span><span class="folder-select-name">${escapeHtml(folder.name)}</span><span class="folder-select-count">${count} libro${count!==1?'s':''}</span>`;
+          item.addEventListener('click', () => {
+            haptic();
+            const b = findBook(state._movingBookId);
+            if (b) { b.folderId = folder.id; saveState(); renderLibrary(); }
+            closeSheets(); toast('Agregado a "' + folder.name + '" ❦');
+          });
+          selectList.appendChild(item);
+        });
+        // Swap button labels for this context
+        document.getElementById('btnMoveNoFolder').textContent = 'Sin carpeta';
+        openSheet('sheetMoveToFolder');
+      }, 350);
+    } else {
+      closeSheets();
+      toast('Libro agregado ❦');
+    }
+  });
+
+  document.getElementById('btnCancelManualBook').addEventListener('click', closeSheets);
+
+  /* ── FOLDERS ── */
+  document.getElementById('btnAddMain').addEventListener('click', () => { haptic(); openSheet('sheetCreate'); });
+
+  document.getElementById('optCreateBook').addEventListener('click', () => {
+    haptic(); closeSheets();
+    setTimeout(() => openManualBookSheet(), 350);
+  });
+
+  document.getElementById('optCreateFolder').addEventListener('click', () => {
+    haptic(); closeSheets();
+    setTimeout(() => {
+      document.getElementById('newFolderNameInput').value = '';
+      openSheet('sheetNewFolder');
+      setTimeout(() => document.getElementById('newFolderNameInput').focus(), 400);
+    }, 350);
+  });
+
+  document.getElementById('newFolderNameInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btnConfirmNewFolder').click(); }
+  });
+
+  document.getElementById('btnConfirmNewFolder').addEventListener('click', () => {
+    const name = document.getElementById('newFolderNameInput').value.trim();
+    if (!name) { toast('Escribe un nombre'); return; }
+    const folder = { id: 'f_' + Date.now(), name, expanded: true, addedAt: Date.now() };
+    state.folders.push(folder);
+    saveState(); renderLibrary(); closeSheets(); toast('Carpeta "' + name + '" creada');
+    haptic();
+  });
+
+  document.getElementById('btnCancelNewFolder').addEventListener('click', closeSheets);
+
+  function openMoveFolderSheet(bookId) {
+    state._movingBookId = bookId;
+    const selectList = document.getElementById('folderSelectList');
+    selectList.innerHTML = '';
+    if (state.folders.length === 0) {
+      selectList.innerHTML = '<div class="folder-empty-msg">No tienes carpetas aún. Crea una con el botón + arriba.</div>';
+    } else {
+      state.folders.forEach((folder, idx) => {
+        const colorClass = idx % 2 === 0 ? 'color-a' : 'color-b';
+        const count = state.books.filter(b => b.folderId === folder.id).length;
+        const item = document.createElement('button');
+        item.className = `folder-select-item ${colorClass}`;
+        item.innerHTML = `<span class="folder-select-icon">📁</span><span class="folder-select-name">${escapeHtml(folder.name)}</span><span class="folder-select-count">${count} libro${count!==1?'s':''}</span>`;
+        item.addEventListener('click', () => {
+          haptic();
+          const book = findBook(state._movingBookId);
+          if (book) { book.folderId = folder.id; saveState(); renderLibrary(); }
+          closeSheets(); toast('Movido a "' + folder.name + '"');
+        });
+        selectList.appendChild(item);
+      });
+    }
+    openSheet('sheetMoveToFolder');
+  }
+
+  document.getElementById('btnMoveNoFolder').addEventListener('click', () => {
+    const book = findBook(state._movingBookId);
+    if (book) { book.folderId = null; saveState(); renderLibrary(); }
+    closeSheets(); toast('Movido a Sin carpeta');
+  });
+  document.getElementById('btnCancelMoveFolder').addEventListener('click', closeSheets);
+
+  document.getElementById('btnConfirmDeleteFolder').addEventListener('click', () => {
+    const folderId = state._deletingFolderId;
+    state.books.forEach(b => { if (b.folderId === folderId) b.folderId = null; });
+    state.folders = state.folders.filter(f => f.id !== folderId);
+    saveState(); renderLibrary(); closeSheets(); toast('Carpeta eliminada');
+  });
+  document.getElementById('btnCancelDeleteFolder').addEventListener('click', closeSheets);
+
+  /* ── SETTINGS ── */
+  document.getElementById('btnSettings').addEventListener('click', () => { haptic(); openSheet('sheetSettings'); });
+
+  document.getElementById('btnExport').addEventListener('click', () => {
+    const data = { books: state.books, folders: state.folders, allTags: state.allTags, exportedAt: new Date().toISOString(), version: 2 };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'celebook-' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Biblioteca exportada ✦');
+  });
+
+  document.getElementById('btnImport').addEventListener('click', () => {
+    document.getElementById('importFileInput').click();
+  });
+
+  document.getElementById('importFileInput').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!Array.isArray(data.books)) throw new Error('Formato inválido');
+        state.books = data.books.map(b => ({
+          ...b,
+          tags: b.tags || [],
+          folderId: b.folderId || null,
+          isManual: b.isManual || String(b.id||'').startsWith('manual_'),
+          status: b.status || null,
+          dateStart: b.dateStart || null,
+          pauseLog: b.pauseLog || [],
+          dateEnd: b.dateEnd || null,
+          notes: b.notes || '',
+          rating: b.rating || 0
+        }));
+        state.folders = data.folders || [];
+        state.allTags = data.allTags || [];
+        saveState(); updateCounts(); renderLibrary();
+        closeSheets();
+        toast('Biblioteca importada ❦');
+      } catch(err) {
+        toast('Error: archivo inválido');
+      }
+    };
+    reader.readAsText(file);
+    this.value = '';
+  });
+
+  function init() {
+    loadState();
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === state.activeTab));
+    setupTabs();
+    setupSearch();
+    renderLibrary();
+    updateCounts();
+  }
+  document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
